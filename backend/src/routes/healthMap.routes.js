@@ -4,13 +4,20 @@ import HealthFacility from '../models/HealthFacility.js';
 import HealthWorker from '../models/HealthWorker.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
-import proximityService from '../services/proximityService.js';
 import { cacheMiddleware } from '../middleware/cache.js';
+import proximityService from '../services/proximityService.js';
 
 const router = express.Router();
 
 // Apply authentication middleware to all routes
 router.use(authMiddleware);
+
+/**
+ * @swagger
+ * tags:
+ *   name: Health Map
+ *   description: স্বাস্থ্য মানচিত্র (Community Health Map)
+ */
 
 /**
  * @swagger
@@ -138,7 +145,7 @@ router.post('/nearest', async (req, res) => {
  *       200:
  *         description: List of health workers
  */
-router.get('/workers', async (req, res) => {
+router.get('/workers', cacheMiddleware(1800), async (req, res) => {
   try {
     const { location, radius = 5000, skill } = req.query;
     
@@ -194,7 +201,7 @@ router.get('/workers', async (req, res) => {
  *       404:
  *         description: Facility not found
  */
-router.get('/facility/:id', async (req, res) => {
+router.get('/facility/:id', cacheMiddleware(3600), async (req, res) => {
   try {
     const { id } = req.params;
     
