@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { logger, requestLogger } from './utils/logger.js';
 import authRoutes from "./routes/auth.routes.js";
+import moodRoutes from "./routes/mood.routes.js";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.js";
 
@@ -23,6 +24,7 @@ app.get('/api/healthCheck', (req, res) => {
 
 // apis 
 app.use("/api/auth", authRoutes);
+app.use("/api/mood-checkin", moodRoutes);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 404 handler
