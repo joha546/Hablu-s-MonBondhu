@@ -5,7 +5,7 @@ import HealthWorker from '../models/HealthWorker.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
 import { cacheMiddleware } from '../middleware/cache.js';
-import proximityService from '../services/proximityService.js';
+import proximityService from '../utils/proximityService.js';
 
 const router = express.Router();
 

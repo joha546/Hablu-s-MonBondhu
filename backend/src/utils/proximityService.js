@@ -1,7 +1,7 @@
-// backend/src/services/proximityService.js
+// backend/src/utils/proximityService.js
 import HealthFacility from '../models/HealthFacility.js';
 import HealthWorker from '../models/HealthWorker.js';
-import { logger } from '../utils/logger.js';
+import { logger } from './logger.js';
 
 class ProximityService {
   async findNearestFacilities(userLocation, maxDistance = 10000, limit = 10) {
@@ -99,6 +99,109 @@ class ProximityService {
     
     return directions[index];
   }
+  
+  async findNearestHealthWorkers(userLocation, maxDistance = 5000, limit = 10) {
+    try {
+      const filter = {
+        location: {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: userLocation
+            },
+            $maxDistance: maxDistance
+          }
+        }
+      };
+      
+      const workers = await HealthWorker.find(filter)
+        .limit(limit);
+      
+      // Calculate distance for each worker
+      const workersWithDistance = workers.map(worker => {
+        const distance = this.calculateDistance(userLocation, worker.location.coordinates);
+        return {
+          ...worker.toObject(),
+          distance
+        };
+      });
+      
+      // Sort by distance
+      return workersWithDistance.sort((a, b) => a.distance - b.distance);
+    } catch (error) {
+      logger.error('Error finding nearest health workers:', error);
+      throw error;
+    }
+  }
+  
+  async findFacilitiesByType(userLocation, facilityType, maxDistance = 10000, limit = 10) {
+    try {
+      const facilities = await HealthFacility.find({
+        type: facilityType,
+        location: {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: userLocation
+            },
+            $maxDistance: maxDistance
+          }
+        }
+      }).limit(limit);
+      
+      // Calculate distance for each facility
+      const facilitiesWithDistance = facilities.map(facility => {
+        const distance = this.calculateDistance(userLocation, facility.location.coordinates);
+        return {
+          ...facility.toObject(),
+          distance
+        };
+      });
+      
+      // Sort by distance
+      return facilitiesWithDistance.sort((a, b) => a.distance - b.distance);
+    } catch (error) {
+      logger.error('Error finding facilities by type:', error);
+      throw error;
+    }
+  }
+  
+  async findFacilitiesByServices(userLocation, services, maxDistance = 10000, limit = 10) {
+    try {
+      const facilities = await HealthFacility.find({
+        services: { $in: services },
+        location: {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: userLocation
+            },
+            $maxDistance: maxDistance
+          }
+        }
+      }).limit(limit);
+      
+      // Calculate distance for each facility
+      const facilitiesWithDistance = facilities.map(facility => {
+        const distance = this.calculateDistance(userLocation, facility.location.coordinates);
+        return {
+          ...facility.toObject(),
+          distance
+        };
+      });
+      
+      // Sort by distance
+      return facilitiesWithDistance.sort((a, b) => a.distance - b.distance);
+    } catch (error) {
+      logger.error('Error finding facilities by services:', error);
+      throw error;
+    }
+  }
 }
 
-export default new ProximityService();
+// Create an instance and export it
+const proximityService = new ProximityService();
+
+// Export both the class and the instance
+export { ProximityService };
+export default proximityService;
