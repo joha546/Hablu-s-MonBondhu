@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+    backend:
+        build:
+            context: .
+            dockerfile: docker/Dockerfile.backend.dev
+
+        env_file:
+            - ./backend/.env
+
+        # environment:
+        #     - NODE_ENV=development
+        #     - PORT=${PORT}
+        #     - MONGO_URI=${MONGO_URI}
+        #     - JWT_SECRET=${JWT_SECRET}
+
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+
+        ports:
+            - "2222:2222"
+
+        volumes:
+            - ./backend/src:/home/node/backend/src
+            - /home/node/backend/node_modules
+
+    client:
+        container_name: client
+        build:
+            context: .
+            dockerfile: docker/Dockerfile.client.dev
+        environment:
+            - NODE_ENV=development
+            - VITE_API_URL=http://localhost:2222
+        ports:
+            - "5173:5173"
+        volumes:
+            - ./client:/home/node/client
+            - /home/node/client/node_modules
+        depends_on:
+            - backend

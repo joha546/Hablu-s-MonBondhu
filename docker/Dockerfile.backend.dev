@@ -1,0 +1,12 @@
+FROM node:25
+
+WORKDIR /home/node/backend
+
+COPY backend/package*.json ./
+RUN npm install
+
+COPY backend/src ./src
+
+EXPOSE 2222
+
+CMD ["npm", "run", "dev"]
