@@ -10,7 +10,7 @@ const SignUp = ({ onSwitchToLogin }) => {
 
   const handleSignUp = async () => {
     if (!name || !email || !password) {
-      setMessage("All fields are required");
+      setMessage("সবগুলো ঘর পূরণ করতে হবে");
       return;
     }
 
@@ -24,15 +24,14 @@ const SignUp = ({ onSwitchToLogin }) => {
         password,
       });
 
-      setMessage(response.data.message); // "User registered successfully"
-      console.log("✅ Sign up successful:", response.data);
+      setMessage(response.data.message || "সফলভাবে নিবন্ধন সম্পন্ন হয়েছে");
+      console.log("✅ সাইন আপ সফল:", response.data);
 
-      // Optionally store token in localStorage
       localStorage.setItem("token", response.data.token);
     } catch (error) {
-      console.error("❌ Error signing up:", error);
+      console.error("❌ সাইন আপে ত্রুটি:", error);
       setMessage(
-        error.response?.data?.message || "Failed to sign up"
+        error.response?.data?.message || "সাইন আপ ব্যর্থ হয়েছে"
       );
     } finally {
       setLoading(false);
@@ -42,29 +41,29 @@ const SignUp = ({ onSwitchToLogin }) => {
   return (
     <div className="flex flex-col space-y-4">
       <h2 className="text-2xl font-semibold text-center text-gray-800 dark:text-white">
-        Create Account
+        একাউন্ট তৈরি করুন
       </h2>
       <p className="text-sm text-gray-500 text-center">
-        Join us today! It only takes a minute.
+        আজই আমাদের সাথে যোগ দিন! মাত্র এক মিনিট সময় লাগবে।
       </p>
 
       <input
         type="text"
-        placeholder="Full Name"
+        placeholder="পূর্ণ নাম"
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="w-full p-2 border rounded-lg bg-white placeholder-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
       />
       <input
         type="email"
-        placeholder="Email"
+        placeholder="ইমেইল"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="w-full p-2 border rounded-lg bg-white placeholder-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
       />
       <input
         type="password"
-        placeholder="Password"
+        placeholder="পাসওয়ার্ড"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="w-full p-2 border rounded-lg bg-white placeholder-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -77,13 +76,13 @@ const SignUp = ({ onSwitchToLogin }) => {
           loading ? "opacity-50 cursor-not-allowed" : "hover:bg-emerald-700"
         }`}
       >
-        {loading ? "Signing up..." : "Sign Up"}
+        {loading ? "সাইন আপ হচ্ছে..." : "সাইন আপ"}
       </button>
 
       {message && (
         <p
           className={`text-center text-sm font-medium ${
-            message.includes("success") ? "text-emerald-600" : "text-red-600"
+            message.includes("সফল") ? "text-emerald-600" : "text-red-600"
           }`}
         >
           {message}
@@ -91,12 +90,12 @@ const SignUp = ({ onSwitchToLogin }) => {
       )}
 
       <p className="text-center text-sm text-gray-500">
-        Already have an account?{" "}
+        ইতিমধ্যে একটি একাউন্ট আছে?{" "}
         <button
           onClick={onSwitchToLogin}
           className="text-emerald-600 hover:underline font-medium"
         >
-          Log in
+          লগইন করুন
         </button>
       </p>
     </div>

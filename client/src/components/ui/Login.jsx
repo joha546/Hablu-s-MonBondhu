@@ -10,34 +10,34 @@ const Login = ({ onSwitchToSignUp, onLoginSuccess }) => {
     try {
       const response = await apiClient.post("/auth/login", { email, password });
 
-      const userData = response.data.user; 
-      onLoginSuccess(userData); // notify Navbar
-      setMessage("Login successful!");
+      const userData = response.data.user;
+      onLoginSuccess(userData);
+      setMessage("লগইন সফল হয়েছে!");
     } catch (error) {
       console.error("Error logging in:", error);
-      setMessage(error.response?.data?.message || "Failed to login");
+      setMessage(error.response?.data?.message || "লগইন ব্যর্থ হয়েছে");
     }
   };
 
   return (
     <div className="flex flex-col space-y-4">
       <h2 className="text-2xl font-semibold text-center text-gray-800 dark:text-white">
-        Welcome Back
+        আবার স্বাগতম
       </h2>
       <p className="text-sm text-gray-500 text-center">
-        Login to your account to continue
+        আপনার একাউন্টে লগইন করুন চালিয়ে যেতে
       </p>
 
       <input
         type="email"
-        placeholder="Email"
+        placeholder="ইমেইল"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="w-full p-2 border rounded-lg bg-white placeholder-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
       />
       <input
         type="password"
-        placeholder="Password"
+        placeholder="পাসওয়ার্ড"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="w-full p-2 border rounded-lg bg-white placeholder-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -47,7 +47,7 @@ const Login = ({ onSwitchToSignUp, onLoginSuccess }) => {
         onClick={handleLogin}
         className="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
       >
-        Login
+        লগইন
       </button>
 
       {message && (
@@ -57,12 +57,12 @@ const Login = ({ onSwitchToSignUp, onLoginSuccess }) => {
       )}
 
       <p className="text-center text-sm text-gray-500">
-        Don’t have an account?{" "}
+        আপনার কোনো একাউন্ট নেই?{" "}
         <button
           onClick={onSwitchToSignUp}
           className="text-emerald-600 hover:underline font-medium"
         >
-          Sign up
+          সাইন আপ করুন
         </button>
       </p>
     </div>
