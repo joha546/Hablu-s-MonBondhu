@@ -8,6 +8,7 @@ import moodRoutes from "./routes/mood.routes.js";
 import HealthRoutes from './routes/healthMap.routes.js';
 import AnonymousRequestRoutes from './routes/anonymousHealth.routes.js';
 import seasonalHealthRoutes from "./routes/seasonalHealth.routes.js";
+import maternalChildHealthRoutes from "./routes/maternalChildHealth.routes.js";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.js";
 
@@ -31,6 +32,7 @@ app.use("/api/mood-checkin", moodRoutes);
 app.use("/api/healthmap", HealthRoutes);
 app.use("/api/anonymous-health", AnonymousRequestRoutes);
 app.use("/api/seasonal-health", seasonalHealthRoutes);
+app.use("/api/maternal-child-health", maternalChildHealthRoutes);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 404 handler
