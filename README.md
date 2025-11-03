@@ -71,6 +71,8 @@ make test-backend
 
 ---
 
-> Keep it short, code-focused, and everything spins up in **one command**.
+## High-Level Architecture Diagram
 
-```
+View the complete system architecture in Eraser.io:
+[MonBondhu Architecture Diagram](https://app.eraser.io/workspace/7PojrxZh0hoHrb1466v9)
+
