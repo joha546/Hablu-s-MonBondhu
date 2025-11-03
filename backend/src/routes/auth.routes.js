@@ -119,22 +119,22 @@ router.post('/login', async (req, res) => {
     }
     
     // Check if user is verified
-    if (!user.isVerified) {
-      // Generate new OTP
-      const otp = generateOTP();
-      user.otp = otp;
-      user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-      await user.save();
+    // if (!user.isVerified) {
+    //   // Generate new OTP
+    //   const otp = generateOTP();
+    //   user.otp = otp;
+    //   user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    //   await user.save();
       
-      // Send OTP
-      await sendOTP(phoneNumber, otp);
+    //   // Send OTP
+    //   await sendOTP(phoneNumber, otp);
       
-      return res.status(403).json({
-        message: 'Please verify your phone number with the OTP sent',
-        userId: user._id,
-        requiresVerification: true
-      });
-    }
+    //   return res.status(403).json({
+    //     message: 'Please verify your phone number with the OTP sent',
+    //     userId: user._id,
+    //     requiresVerification: true
+    //   });
+    // }
     
     // Generate JWT token
     const token = jwt.sign(
