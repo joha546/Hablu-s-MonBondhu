@@ -2,14 +2,13 @@ import React, { useState } from "react";
 import apiClient from "../../lib/api";
 
 const Login = ({ onSwitchToSignUp, onLoginSuccess }) => {
-  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
   const handleLogin = async () => {
     try {
-      const response = await apiClient.post("/auth/login", { email, password });
-
+      const response = await apiClient.post("/auth/login", { phoneNumber, password });
       const userData = response.data.user;
       onLoginSuccess(userData);
       setMessage("লগইন সফল হয়েছে!");
@@ -28,20 +27,31 @@ const Login = ({ onSwitchToSignUp, onLoginSuccess }) => {
         আপনার একাউন্টে লগইন করুন চালিয়ে যেতে
       </p>
 
-      <input
-        type="email"
-        placeholder="ইমেইল"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full p-2 border rounded-lg bg-white placeholder-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
-      />
-      <input
-        type="password"
-        placeholder="পাসওয়ার্ড"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full p-2 border rounded-lg bg-white placeholder-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
-      />
+      <div className="flex flex-col space-y-1">
+        <label className="text-gray-700 dark:text-gray-200 text-sm font-medium">
+          ফোন নাম্বার
+        </label>
+        <input
+          type="text"
+          placeholder="+8801XXXXXXXXX"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          className="w-full p-2 border rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
+      <div className="flex flex-col space-y-1">
+        <label className="text-gray-700 dark:text-gray-200 text-sm font-medium">
+          পাসওয়ার্ড
+        </label>
+        <input
+          type="password"
+          placeholder="আপনার পাসওয়ার্ড লিখুন"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-2 border rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
 
       <button
         onClick={handleLogin}
@@ -51,9 +61,7 @@ const Login = ({ onSwitchToSignUp, onLoginSuccess }) => {
       </button>
 
       {message && (
-        <p className="text-center text-sm text-emerald-600 font-medium">
-          {message}
-        </p>
+        <p className="text-center text-sm text-emerald-600 font-medium">{message}</p>
       )}
 
       <p className="text-center text-sm text-gray-500">

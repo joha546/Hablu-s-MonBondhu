@@ -3,13 +3,15 @@ import apiClient from "../../lib/api";
 
 const SignUp = ({ onSwitchToLogin }) => {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [age, setAge] = useState("");
+  const [nid, setNid] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async () => {
-    if (!name || !email || !password) {
+    if (!name || !age || !nid || !phoneNumber || !password) {
       setMessage("সবগুলো ঘর পূরণ করতে হবে");
       return;
     }
@@ -18,21 +20,19 @@ const SignUp = ({ onSwitchToLogin }) => {
     setMessage("");
 
     try {
-      const response = await apiClient.post("/auth/signup", {
+      const response = await apiClient.post("/auth/register", {
         name,
-        email,
+        age: Number(age),
+        nid,
+        phoneNumber,
         password,
       });
 
       setMessage(response.data.message || "সফলভাবে নিবন্ধন সম্পন্ন হয়েছে");
       console.log("✅ সাইন আপ সফল:", response.data);
-
-      localStorage.setItem("token", response.data.token);
     } catch (error) {
       console.error("❌ সাইন আপে ত্রুটি:", error);
-      setMessage(
-        error.response?.data?.message || "সাইন আপ ব্যর্থ হয়েছে"
-      );
+      setMessage(error.response?.data?.message || "সাইন আপ ব্যর্থ হয়েছে");
     } finally {
       setLoading(false);
     }
@@ -47,27 +47,70 @@ const SignUp = ({ onSwitchToLogin }) => {
         আজই আমাদের সাথে যোগ দিন! মাত্র এক মিনিট সময় লাগবে।
       </p>
 
-      <input
-        type="text"
-        placeholder="পূর্ণ নাম"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="w-full p-2 border rounded-lg bg-white placeholder-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
-      />
-      <input
-        type="email"
-        placeholder="ইমেইল"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full p-2 border rounded-lg bg-white placeholder-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
-      />
-      <input
-        type="password"
-        placeholder="পাসওয়ার্ড"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full p-2 border rounded-lg bg-white placeholder-black focus:outline-none focus:ring-2 focus:ring-emerald-500"
-      />
+      <div className="flex flex-col space-y-1">
+        <label className="text-gray-700 dark:text-gray-200 text-sm font-medium">
+          পূর্ণ নাম
+        </label>
+        <input
+          type="text"
+          placeholder="যেমনঃ মাহরিনা রহমান"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full p-2 border rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
+      <div className="flex flex-col space-y-1">
+        <label className="text-gray-700 dark:text-gray-200 text-sm font-medium">
+          বয়স
+        </label>
+        <input
+          type="number"
+          placeholder="যেমনঃ ২৫"
+          value={age}
+          onChange={(e) => setAge(e.target.value)}
+          className="w-full p-2 border rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
+      <div className="flex flex-col space-y-1">
+        <label className="text-gray-700 dark:text-gray-200 text-sm font-medium">
+          এনআইডি নাম্বার
+        </label>
+        <input
+          type="text"
+          placeholder="যেমনঃ 1234567890123"
+          value={nid}
+          onChange={(e) => setNid(e.target.value)}
+          className="w-full p-2 border rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
+      <div className="flex flex-col space-y-1">
+        <label className="text-gray-700 dark:text-gray-200 text-sm font-medium">
+          ফোন নাম্বার
+        </label>
+        <input
+          type="text"
+          placeholder="+8801XXXXXXXXX"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          className="w-full p-2 border rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
+      <div className="flex flex-col space-y-1">
+        <label className="text-gray-700 dark:text-gray-200 text-sm font-medium">
+          পাসওয়ার্ড
+        </label>
+        <input
+          type="password"
+          placeholder="কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-2 border rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
 
       <button
         onClick={handleSignUp}
