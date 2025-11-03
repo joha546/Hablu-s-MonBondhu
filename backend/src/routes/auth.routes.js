@@ -1,11 +1,44 @@
 import express from "express";
-import { signup, login, logout } from "../controllers/auth.controller.js";
+import User from "../models/User.model.js";
+import { generateToken, verifyToken } from "../utils/jwt.js";
+import { magicLinkQueue } from "../services/magicLinkQueue.js";
 
 const router = express.Router();
 
-router.post("/signup", signup);
-router.post("/login", login);
-router.post("/logout", logout);
+router.post("/request-magic-link", async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "ইমেইল প্রয়োজন" });
+
+    // Upsert user
+    let user = await User.findOne({ email });
+    if(!user){
+        user = await User.create({ email, verified: false });
+    }
+
+    const token = generateToken({ id: user._id, email });
+    await magicLinkQueue.add("send-link", { email, token });
+
+    res.status(200).json({ message: "ম্যাজিক লিঙ্ক প্রেরণ করা হয়েছে। আপনার ইমেইল চেক করুন।" });
+});
+
+// 2. Magic Link Login
+router.get("/magic-login", async (req, res) => {
+    const { token } = req.query;
+    const decoded = verifyToken(token);
+    if (!decoded){
+        return res.status(401).json({ message: "লিঙ্ক অবৈধ বা মেয়াদোত্তীর্ণ" });
+    }
+    const user = await User.findById(decoded.id);
+    if(!user){
+        return res.status(404).json({ message: "ব্যবহারকারী পাওয়া যায়নি" });
+    }
+    
+    // Mark user as verified
+    user.verified = true;
+    await user.save();
+
+    res.status(200).json({ message: "সফলভাবে লগইন হয়েছে", user: { id: user._id, email: user.email } });
+});
 
 export default router;
 
