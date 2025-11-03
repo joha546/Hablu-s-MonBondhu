@@ -36,10 +36,10 @@ router.post('/register', async (req, res) => {
     await user.save();
     
     // Generate OTP
-    const otp = generateOTP();
-    user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    await user.save();
+    // const otp = generateOTP();
+    // user.otp = otp;
+    // user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    // await user.save();
     
     // Send OTP (in production, this would be an SMS service)
     // await sendOTP(phoneNumber, otp);
