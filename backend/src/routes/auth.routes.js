@@ -42,7 +42,7 @@ router.post('/register', async (req, res) => {
     await user.save();
     
     // Send OTP (in production, this would be an SMS service)
-    await sendOTP(phoneNumber, otp);
+    // await sendOTP(phoneNumber, otp);
     
     logger.info(`New user registered with phone: ${phoneNumber}`);
     
