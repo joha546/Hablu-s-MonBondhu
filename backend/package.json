@@ -11,7 +11,8 @@
     "lint": "eslint ./src --ext .js",
     "pretty": "prettier --write .",
     "docker:up": "docker compose -f ../compose.dev.yml up --build",
-    "docker:logs": "docker logs -f hackathon-backend"
+    "docker:logs": "docker logs -f hackathon-backend",
+    "ingest-data": "babel-node scripts/ingestData.js"
   },
   "dependencies": {
     "@filip96/node-dbf": "^1.1.5",
@@ -19,21 +20,26 @@
     "axios": "^1.13.1",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.63.0",
+    "cheerio": "^1.1.2",
     "cors": "^2.8.5",
+    "csv-parse": "^6.1.0",
     "csv-parser": "^3.2.0",
     "dotenv": "17.2.3",
     "express": "5.1.0",
+    "geojson": "^0.5.0",
     "helmet": "8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "8.19.2",
     "node-dbf": "^0.4.0",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.10",
     "shapefile": "^0.6.6",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0",
     "winston": "^3.18.3",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zlib": "^1.0.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.3",

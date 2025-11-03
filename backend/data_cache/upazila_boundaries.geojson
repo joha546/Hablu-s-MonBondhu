@@ -1,0 +1,145 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "NAME_1": "Dhaka Division",
+        "NAME_2": "Dhaka District",
+        "NAME_3": "Savar Upazila"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              90.2,
+              23.8
+            ],
+            [
+              90.3,
+              23.8
+            ],
+            [
+              90.3,
+              23.9
+            ],
+            [
+              90.2,
+              23.9
+            ],
+            [
+              90.2,
+              23.8
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "NAME_1": "Dhaka Division",
+        "NAME_2": "Dhaka District",
+        "NAME_3": "Mirpur Upazila"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              90.3,
+              23.7
+            ],
+            [
+              90.4,
+              23.7
+            ],
+            [
+              90.4,
+              23.8
+            ],
+            [
+              90.3,
+              23.8
+            ],
+            [
+              90.3,
+              23.7
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "NAME_1": "Chittagong Division",
+        "NAME_2": "Chittagong District",
+        "NAME_3": "Sitakunda Upazila"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              91.6,
+              22.5
+            ],
+            [
+              91.7,
+              22.5
+            ],
+            [
+              91.7,
+              22.6
+            ],
+            [
+              91.6,
+              22.6
+            ],
+            [
+              91.6,
+              22.5
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "NAME_1": "Khulna Division",
+        "NAME_2": "Khulna District",
+        "NAME_3": "Dumuria Upazila"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              89.4,
+              22.8
+            ],
+            [
+              89.5,
+              22.8
+            ],
+            [
+              89.5,
+              22.9
+            ],
+            [
+              89.4,
+              22.9
+            ],
+            [
+              89.4,
+              22.8
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
