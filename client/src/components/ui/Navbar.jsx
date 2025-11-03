@@ -17,11 +17,11 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const navLinks = [
-    { href: "#", text: "Home" },
-    { href: "#", text: "Articles" },
-    { href: "#", text: "Tutorials" },
-    { href: "#", text: "Reviews" },
-    { href: "#", text: "About" },
+    { href: "#", text: "হোম" },
+    { href: "#", text: "আর্টিকেলস" },
+    { href: "#", text: "টিউটোরিয়ালস" },
+    { href: "#", text: "রিভিউ" },
+    { href: "#", text: "আমাদের সম্পর্কে" },
   ];
 
   useEffect(() => {
@@ -45,7 +45,6 @@ const Navbar = () => {
     navigate("/");
   };
 
-  // ✅ no redirect now
   const handleLoginSuccess = (userData) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -57,17 +56,17 @@ const Navbar = () => {
       <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
+            {/* লোগো */}
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">T</span>
               </div>
               <span className="font-bold text-xl text-gray-900 dark:text-white">
-                Hablu 2.0
+                হাবলু ২.০
               </span>
             </Link>
 
-            {/* Desktop Menu */}
+            {/* ডেস্কটপ মেনু */}
             <nav className="hidden md:flex items-center space-x-8">
               {navLinks.map((link) => (
                 <a
@@ -80,7 +79,7 @@ const Navbar = () => {
               ))}
             </nav>
 
-            {/* Right Section */}
+            {/* ডান পাশ */}
             <div className="hidden md:flex items-center space-x-3 relative">
               <button className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                 <Search className="h-5 w-5" />
@@ -91,7 +90,7 @@ const Navbar = () => {
                   onClick={() => setShowLogin(true)}
                   className="px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
                 >
-                  Get Started
+                  শুরু করুন
                 </button>
               ) : (
                 <div className="relative">
@@ -105,23 +104,22 @@ const Navbar = () => {
                   {dropdownOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-2 z-50">
                       <p className="px-4 py-2 text-sm text-gray-800 dark:text-gray-200 font-medium">
-                        {user.name || "User"}
+                        {user.name || "ইউজার"}
                       </p>
 
-                      {/* ✅ Click Dashboard manually */}
                       <Link
                         to="/dashboard"
                         className="block px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={() => setDropdownOpen(false)}
                       >
-                        Dashboard
+                        ড্যাশবোর্ড
                       </Link>
 
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
-                        Logout
+                        লগ আউট
                       </button>
                     </div>
                   )}
@@ -129,12 +127,12 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Mobile Button */}
+            {/* মোবাইল মেনু বোতাম */}
             <div className="md:hidden flex items-center relative">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
-                aria-label="Toggle menu"
+                aria-label="মেনু টগল করুন"
               >
                 <Menu
                   className={`h-6 w-6 transition-transform duration-300 ${
@@ -152,7 +150,7 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* Modals */}
+      {/* মডাল */}
       <Modal isOpen={showLogin} onClose={() => setShowLogin(false)}>
         <Login
           onSwitchToSignUp={() => {
