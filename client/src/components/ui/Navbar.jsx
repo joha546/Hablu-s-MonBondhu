@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Menu, X, Search, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import Login from "./Login";
 import SignUp from "./SignUp";
 import Modal from "./Modal";
@@ -10,8 +11,10 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
-  const [user, setUser] = useState(null); // store logged-in user
+  const [user, setUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   const navLinks = [
     { href: "#", text: "Home" },
@@ -22,14 +25,12 @@ const Navbar = () => {
   ];
 
   useEffect(() => {
-    // Lock scroll when menu/modal open
     document.body.style.overflow =
       isMenuOpen || showLogin || showSignUp ? "hidden" : "auto";
     return () => (document.body.style.overflow = "auto");
   }, [isMenuOpen, showLogin, showSignUp]);
 
   useEffect(() => {
-    // Check localStorage for user login
     const storedUser = localStorage.getItem("user");
     const storedToken = localStorage.getItem("token");
     if (storedUser) setUser(JSON.parse(storedUser));
@@ -41,8 +42,10 @@ const Navbar = () => {
     localStorage.removeItem("token");
     setUser(null);
     setDropdownOpen(false);
+    navigate("/");
   };
 
+  // ✅ no redirect now
   const handleLoginSuccess = (userData) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -51,19 +54,18 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Navbar */}
       <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <a href="#" className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">T</span>
               </div>
               <span className="font-bold text-xl text-gray-900 dark:text-white">
-                Template
+                Hablu 2.0
               </span>
-            </a>
+            </Link>
 
             {/* Desktop Menu */}
             <nav className="hidden md:flex items-center space-x-8">
@@ -99,17 +101,22 @@ const Navbar = () => {
                   >
                     <User className="w-6 h-6" />
                   </button>
+
                   {dropdownOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-2 z-50">
                       <p className="px-4 py-2 text-sm text-gray-800 dark:text-gray-200 font-medium">
                         {user.name || "User"}
                       </p>
-                      <a
-                        href="/dashboard"
+
+                      {/* ✅ Click Dashboard manually */}
+                      <Link
+                        to="/dashboard"
                         className="block px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => setDropdownOpen(false)}
                       >
                         Dashboard
-                      </a>
+                      </Link>
+
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -145,7 +152,7 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* ✅ Login Modal */}
+      {/* Modals */}
       <Modal isOpen={showLogin} onClose={() => setShowLogin(false)}>
         <Login
           onSwitchToSignUp={() => {
@@ -156,7 +163,6 @@ const Navbar = () => {
         />
       </Modal>
 
-      {/* ✅ SignUp Modal */}
       <Modal isOpen={showSignUp} onClose={() => setShowSignUp(false)}>
         <SignUp
           onSwitchToLogin={() => {
