@@ -12,5 +12,5 @@ export default {
       user: process.env.SMTP_USER || "user@example.com",
       pass: process.env.SMTP_PASS || "password"
   },
-  redisUrl: process.env.REDIS_URL || "redis://127.0.0.1:6379"
+  // redisUrl: process.env.REDIS_URL || "redis://127.0.0.1:6379"
 };
