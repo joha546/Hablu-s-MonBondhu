@@ -2,18 +2,22 @@ import {
   ListChecks,
   Lock,
   LogOut,
+  Menu,
   Settings,
   Swords,
   User,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
-const SideMenu = () => {
+const AppLayout = () => {
   const [user, setUser] = useState(null);
   const [showLogout, setShowLogout] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  // ✅ Load user from localStorage
   const loadUserFromStorage = () => {
     const storedUser = localStorage.getItem("user");
     const isLoggedIn = localStorage.getItem("isLoggedIn");
@@ -27,18 +31,16 @@ const SideMenu = () => {
   useEffect(() => {
     const handleUserChange = () => loadUserFromStorage();
     loadUserFromStorage();
-
     ["storage", "userLogin", "userLogout"].forEach((evt) =>
       window.addEventListener(evt, handleUserChange)
     );
-
-    return () => {
+    return () =>
       ["storage", "userLogin", "userLogout"].forEach((evt) =>
         window.removeEventListener(evt, handleUserChange)
       );
-    };
   }, []);
 
+  // ✅ Handle logout
   const handleLogout = () => {
     ["isLoggedIn", "user", "token"].forEach((k) =>
       localStorage.removeItem(k)
@@ -46,6 +48,7 @@ const SideMenu = () => {
     setUser(null);
     window.dispatchEvent(new Event("userLogout"));
     navigate("/");
+    if (isMenuOpen) setIsMenuOpen(false);
   };
 
   const currentUser =
@@ -73,34 +76,76 @@ const SideMenu = () => {
   ];
 
   const isAuthenticated = !!user;
+  const handleNavLinkClick = () => {
+    if (isMenuOpen) setIsMenuOpen(false);
+  };
+
+  // ✅ Hover state for sidebar expand
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-gray-100 font-sans">
-      {/* Sidebar */}
-      <div className="w-72 bg-[#1f2937] text-white p-5 flex flex-col justify-between shadow-xl">
-        <div>
-          {/* Logo */}
-          <div className="flex items-center text-3xl font-extrabold text-[#10b981] mb-6 border-b border-gray-700/50 pb-3">
-            <Swords className="mr-3 w-8 h-8" />
-            হাবলু ২.০
+      {/* ✅ Mobile Menu Toggle Button */}
+      <button
+        onClick={() => setIsMenuOpen(true)}
+        className="md:hidden fixed top-4 left-4 z-40 p-3 rounded-full bg-[#1f2937] text-[#10b981] shadow-md hover:bg-gray-800 transition-colors"
+        aria-label="Open menu"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+
+      {/* ✅ Sidebar */}
+      <aside
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`fixed inset-y-0 left-0 z-50 bg-[#1f2937] text-white p-5 flex flex-col justify-between shadow-xl transition-all duration-300 ease-in-out 
+  ${isMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} 
+  ${isHovered ? "md:w-64" : "md:w-20"}
+  h-screen overflow-hidden select-none
+  `}
+      >
+        {/* Top Section */}
+        <div className="flex flex-col flex-grow">
+          <div className="flex items-center text-2xl font-extrabold text-[#10b981] mb-6 border-b border-gray-700/50 pb-3">
+            <Swords className="mr-2 w-7 h-7 shrink-0" />
+            <span
+              className={`transition-all duration-300 overflow-hidden ${isHovered ? "opacity-100 w-auto" : "opacity-0 w-0"
+                }`}
+            >
+              হাবলু ২.০
+            </span>
+            {/* Close button on mobile */}
+            <button
+              onClick={() => setIsMenuOpen(false)}
+              className="md:hidden ml-auto p-1 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition"
+              aria-label="Close menu"
+            >
+              <X className="w-6 h-6" />
+            </button>
           </div>
 
-          {/* Missions */}
+          {/* ✅ Mission Links (no scroll, fixed height) */}
           {isAuthenticated ? (
-            <ul className="space-y-1 overflow-y-auto max-h-[calc(100vh-250px)] scrollbar-thin scrollbar-thumb-gray-700">
+            <ul className="space-y-1 mt-2">
               {missions.map((mission) => (
                 <li key={mission.id}>
                   <NavLink
                     to={mission.path}
+                    onClick={handleNavLinkClick}
                     className={({ isActive }) =>
-                      `w-full flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${isActive
-                        ? "bg-[#10b981] text-white shadow-lg"
-                        : "text-gray-200 hover:bg-gray-700/50 hover:text-white"
+                      `flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${isActive
+                        ? "bg-[#10b981] text-white shadow-md"
+                        : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
                       }`
                     }
                   >
-                    <ListChecks className="mr-2 w-4 h-4" />
-                    {mission.name}
+                    <ListChecks className="w-5 h-5 shrink-0" />
+                    <span
+                      className={`ml-3 transition-all duration-300 ${isHovered ? "opacity-100 w-auto" : "opacity-0 w-0"
+                        }`}
+                    >
+                      {mission.name}
+                    </span>
                   </NavLink>
                 </li>
               ))}
@@ -113,13 +158,16 @@ const SideMenu = () => {
           )}
         </div>
 
-        {/* User Profile & Logout */}
-        <div className="border-t border-gray-700/50 pt-4 space-y-3">
+        {/* ✅ Bottom Section (User Info + Logout/Login) */}
+        <div className="border-t border-gray-700/50 pt-4 space-y-3 mt-auto">
           <div className="flex items-center p-2 rounded-lg bg-gray-800/50">
             <div className="w-10 h-10 bg-[#10b981] rounded-full flex items-center justify-center text-lg font-bold text-white shadow-md mr-3 shrink-0">
               {isAuthenticated ? initials : <User className="w-5 h-5" />}
             </div>
-            <div className="grow min-w-0">
+            <div
+              className={`flex-1 min-w-0 transition-all duration-300 ${isHovered ? "opacity-100 w-auto" : "opacity-0 w-0"
+                }`}
+            >
               <p
                 className="text-sm font-semibold text-white truncate"
                 title={currentUser.name}
@@ -153,7 +201,10 @@ const SideMenu = () => {
 
           {!isAuthenticated && (
             <button
-              onClick={() => navigate("/")}
+              onClick={() => {
+                navigate("/");
+                if (isMenuOpen) setIsMenuOpen(false);
+              }}
               className="w-full flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors duration-200"
             >
               <Lock className="mr-2 w-5 h-5" />
@@ -161,14 +212,23 @@ const SideMenu = () => {
             </button>
           )}
         </div>
-      </div>
+      </aside>
 
-      {/* Right Content Area */}
-      <div className="flex-1 p-8 overflow-y-auto">
+
+      {/* ✅ Mobile Backdrop */}
+      {isMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMenuOpen(false)}
+        />
+      )}
+
+      {/* ✅ Main Content */}
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto md:ml-20 transition-all duration-300">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 };
 
-export default SideMenu;
+export default AppLayout;

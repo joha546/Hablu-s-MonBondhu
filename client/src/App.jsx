@@ -9,7 +9,7 @@ import Mission6 from "./components/Mission 6/Mission6";
 import Mission7 from "./components/Mission 7/Mission7";
 import Mission8 from "./components/Mission 8/Mission8";
 import Mission9 from "./components/Mission 9/Mission9";
-import SideMenu from "./components/sidebar/SideMenu";
+import SideMenu from "./components/SideMenu.jsx";
 
 
 // Optional Home Page

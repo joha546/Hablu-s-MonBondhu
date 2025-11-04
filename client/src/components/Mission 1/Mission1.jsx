@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from "react";
-import apiClient from "../../lib/api";
 import {
-  HeartHandshake,
-  Loader2,
-  Send,
-  MessageSquare,
-  Smile,
   Frown,
-  Meh,
-  SmilePlus,
+  HeartHandshake,
   Laugh,
+  Loader2,
+  Meh,
+  MessageSquare,
+  Send,
+  Smile,
+  SmilePlus,
   User,
   Zap,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import apiClient from "../../lib/api";
 
 const Mission1 = () => {
   const [mood, setMood] = useState(null);
@@ -116,16 +116,14 @@ const Mission1 = () => {
                     type="button"
                     key={option.value}
                     onClick={() => setMood(option.value)}
-                    className={`flex flex-col items-center justify-center w-1/5 p-2 rounded-xl text-sm font-medium transition-all duration-300 border-2 ${
-                      isSelected
+                    className={`flex flex-col items-center justify-center w-1/5 p-2 rounded-xl text-sm font-medium transition-all duration-300 border-2 ${isSelected
                         ? "bg-emerald-600 text-white border-emerald-600 shadow-lg"
                         : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-emerald-50 dark:hover:bg-gray-600"
-                    }`}
+                      }`}
                   >
                     <Icon
-                      className={`w-6 h-6 mb-1 ${
-                        isSelected ? "text-white" : option.color
-                      }`}
+                      className={`w-6 h-6 mb-1 ${isSelected ? "text-white" : option.color
+                        }`}
                     />
                     {option.label}
                   </button>

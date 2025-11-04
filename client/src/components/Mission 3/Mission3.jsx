@@ -13,7 +13,7 @@ import {
   UserCheck,
   Users,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // --- MOCK API IMPLEMENTATION (Replacing external import) ---
 // This section simulates the backend responses for demonstration purposes.
@@ -25,7 +25,7 @@ const MOCK_NEAREST = [
 ];
 
 const MOCK_WORKERS = [
-  { _id: "w1", name: "রহিম মিয়া", skills: ["প্রাথমিক চিকিৎসা", "টিকা"] },
+  { _id: "w1", name: "রহিম মিয়া", skills: ["প্রাথমিক চিকিৎসা", "টিকা"] },
   { _id: "w2", name: "জেসমিন আক্তার", skills: ["মাতৃত্বকালীন যত্ন", "পুষ্টি পরামর্শ"] },
   { _id: "w3", name: "কামাল হোসেন", skills: ["জরুরী সাড়া", "রোগ নিয়ন্ত্রণ"] },
 ];
@@ -42,10 +42,10 @@ const MOCK_CATEGORIES = {
 
 const MOCK_TRUST_INFO = {
   privacy: {
-    anonymous: "আপনার পরিচয় গোপন রাখা হবে।",
-    noTracking: "আপনার কোনো ব্যক্তিগত ডেটা ট্র্যাক করা হয় না।",
-    dataRetention: "পরামর্শের পর তথ্য মুছে ফেলা হয়।",
-    encryption: "সমস্ত যোগাযোগ এনক্রিপ্ট করা হয়।"
+    anonymous: "আপনার পরিচয় গোপন রাখা হবে।",
+    noTracking: "আপনার কোনো ব্যক্তিগত ডেটা ট্র্যাক করা হয় না।",
+    dataRetention: "পরামর্শের পর তথ্য মুছে ফেলা হয়।",
+    encryption: "সমস্ত যোগাযোগ এনক্রিপ্ট করা হয়।"
   }
 };
 
@@ -53,7 +53,7 @@ const MOCK_ANON_RESPONSE = {
   response: {
     primaryAdvice: "দ্রুত একজন ডাক্তারের সাথে পরামর্শ করুন। এটি সাধারণ ফ্লু হতে পারে।",
     immediateActions: "পর্যাপ্ত বিশ্রাম নিন, প্যারাসিটামল খান এবং প্রচুর পানি পান করুন।",
-    culturalConsiderations: "পরিবারের বয়স্ক সদস্যদের থেকে দূরত্ব বজায় রাখুন এবং ঐতিহ্যবাহী খাবার খেতে পারেন যা আরোগ্য লাভে সহায়তা করে।"
+    culturalConsiderations: "পরিবারের বয়স্ক সদস্যদের থেকে দূরত্ব বজায় রাখুন এবং ঐতিহ্যবাহী খাবার খেতে পারেন যা আরোগ্য লাভে সহায়তা করে।"
   }
 };
 
@@ -68,7 +68,7 @@ const apiClient = {
         } else if (url === "/anonymous-health/trust-info") {
           resolve({ data: MOCK_TRUST_INFO });
         } else if (url === "/healthmap/workers") {
-          // optionally simulate simple param-based behavior (e.g., limit)
+          // Mocking the use of location but returning static data
           const limit = params.limit || MOCK_WORKERS.length;
           resolve({ data: MOCK_WORKERS.slice(0, limit) });
         } else {
@@ -81,10 +81,12 @@ const apiClient = {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         if (url === "/healthmap/nearest") {
+          // Mocking the use of location but returning static data
           resolve({ data: MOCK_NEAREST });
         } else if (url === "/anonymous-health/request") {
-          if (!data.category || data.symptoms.length === 0 || data.symptoms[0].length === 0) {
-            // Basic form validation simulation
+          // Basic form validation simulation
+          const symptomsArray = Array.isArray(data.symptoms) ? data.symptoms : (data.symptoms || "").split(",").filter(s => s.trim().length > 0);
+          if (!data.category || symptomsArray.length === 0) {
             reject({ response: { data: { message: "অনুগ্রহ করে বিষয় এবং উপসর্গ লিখুন।" } } });
           }
           resolve({ data: MOCK_ANON_RESPONSE });
@@ -97,13 +99,20 @@ const apiClient = {
 };
 // --- END MOCK API IMPLEMENTATION ---
 
+const DEFAULT_LOCATION_NAME = "Dhaka, Bangladesh (ডিফল্ট)";
+const DEFAULT_LOCATION_COORDS = { lat: 23.8103, lng: 90.4125 }; // [lat, lng]
 
 const Mission3 = () => {
-  // --- STATE FOR HEALTH MAP ---
+  // --- STATE FOR HEALTH MAP DATA ---
   const [nearest, setNearest] = useState([]);
   const [workers, setWorkers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Global loading for Map/Workers
   const [globalError, setGlobalError] = useState("");
+
+  // --- NEW LOCATION STATES ---
+  const [userLocation, setUserLocation] = useState(null); // { lat: number, lng: number, isDefault?: boolean }
+  const [isLocationLoading, setIsLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState(null);
 
   // --- STATE FOR ANONYMOUS HEALTH ---
   const [categories, setCategories] = useState([]);
@@ -126,46 +135,83 @@ const Mission3 = () => {
   // UI State
   const [activeTab, setActiveTab] = useState('map'); // 'map' or 'anon'
 
-  // Map Data
-  const userApiLocation = useMemo(() => [90.4125, 23.8103], []); // [lng, lat] for API (Dhaka demo)
+  // --- LOCATION FETCHING FUNCTION ---
+  const fetchUserLocation = useCallback(() => {
+    setIsLocationLoading(true);
+    setLocationError(null);
 
-  // --- CONSOLIDATED API HELPER FUNCTION ---
-  const apiCall = useCallback(async (endpoint, setter, errorMessage, method = 'get', data = {}) => {
+    if (!navigator.geolocation) {
+      const errMsg = "❌ Geolocation is not supported by your browser. Using default location.";
+      setLocationError(errMsg);
+      setUserLocation({ ...DEFAULT_LOCATION_COORDS, isDefault: true });
+      setIsLocationLoading(false);
+      return;
+    }
+
+    // Success callback
+    const success = (position) => {
+      setUserLocation({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      });
+      setIsLocationLoading(false);
+    };
+
+    // Error callback
+    const error = (err) => {
+      console.error("Geolocation Error:", err);
+      let errMsg = "❌ অবস্থান অ্যাক্সেস অস্বীকার করা হয়েছে বা ব্যর্থ হয়েছে। ডিফল্ট অবস্থান ব্যবহার করা হচ্ছে।";
+      if (err.code === 1) errMsg = "❌ অবস্থান অ্যাক্সেস অস্বীকার করা হয়েছে। ডিফল্ট অবস্থান ব্যবহার করা হচ্ছে।";
+      if (err.code === 2) errMsg = "❌ অবস্থান উপলব্ধ নয়। ডিফল্ট অবস্থান ব্যবহার করা হচ্ছে।";
+      if (err.code === 3) errMsg = "❌ অবস্থানের অনুরোধ সময় অতিক্রম করেছে। ডিফল্ট অবস্থান ব্যবহার করা হচ্ছে।";
+
+      setLocationError(errMsg);
+      setUserLocation({ ...DEFAULT_LOCATION_COORDS, isDefault: true });
+      setIsLocationLoading(false);
+    };
+
+    navigator.geolocation.getCurrentPosition(success, error, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    });
+  }, []);
+
+  // --- DATA FETCHING (Combined and Location Dependent) ---
+  const fetchHealthData = useCallback(async (location) => {
+    // API expects [lng, lat], but our state is {lat, lng}
+    const locationToSend = [location.lng, location.lat];
+
     try {
-      // Only show global loading/error for the map data fetches
       setLoading(true);
       setGlobalError("");
 
-      let response;
-      if (method === 'post') {
-        response = await apiClient.post(endpoint, data);
-      } else {
-        response = await apiClient.get(endpoint, { params: data });
-      }
+      // 1. Fetch Nearest Facilities (POST)
+      const nearestRes = await apiClient.post("/healthmap/nearest", {
+        location: locationToSend,
+        limit: 5,
+        maxDistance: 5000,
+      });
+      setNearest(nearestRes.data);
 
-      setter(response.data);
+      // 2. Fetch Health Workers (GET)
+      const workersRes = await apiClient.get("/healthmap/workers", {
+        params: {
+          location: locationToSend.join(","),
+          radius: 3000,
+        },
+      });
+      setWorkers(workersRes.data);
     } catch (err) {
-      console.error(`${errorMessage} error:`, err);
-      // Ensure we access the message property correctly from the mock API error structure
-      const errorMsg = err.response?.data?.message || `❌ ${errorMessage} failed.`;
+      console.error("Health Data Fetch error:", err);
+      const errorMsg = err.response?.data?.message || `❌ স্বাস্থ্য তথ্য লোড করতে ব্যর্থ হয়েছে।`;
       setGlobalError(errorMsg);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Dependencies are stable
 
-  // --- DATA FETCHERS ---
-  const fetchNearest = useCallback(() => apiCall("/healthmap/nearest", setNearest, "Nearest facilities fetch failed", 'post', {
-    location: userApiLocation,
-    limit: 5,
-    maxDistance: 5000,
-  }), [apiCall, userApiLocation]);
-
-  const fetchWorkers = useCallback(() => apiCall("/healthmap/workers", setWorkers, "Health workers fetch failed", 'get', {
-    location: userApiLocation.join(","),
-    radius: 3000,
-  }), [apiCall, userApiLocation]);
-
+  // Fetch meta data (independent of map data)
   const fetchAnonymousMeta = useCallback(async () => {
     try {
       const [catRes, trustRes] = await Promise.all([
@@ -181,13 +227,20 @@ const Mission3 = () => {
 
   // --- EFFECT FOR INITIAL DATA LOAD ---
   useEffect(() => {
-    // Only fetching nearest and workers, as the "All Facilities" list is often too long for a good UI
-    fetchNearest();
-    fetchWorkers();
+    // 1. Start location fetching immediately
+    fetchUserLocation();
+    // 2. Fetch metadata (can run in parallel)
     fetchAnonymousMeta();
-  }, [fetchNearest, fetchWorkers, fetchAnonymousMeta]);
+  }, [fetchUserLocation, fetchAnonymousMeta]);
 
-  // --- ANONYMOUS REQUEST HANDLER ---
+  // Effect to fetch map data whenever location is ready (not null and not loading)
+  useEffect(() => {
+    if (userLocation && !isLocationLoading) {
+      fetchHealthData(userLocation);
+    }
+  }, [userLocation, isLocationLoading, fetchHealthData]);
+
+  // --- ANONYMOUS REQUEST HANDLER (Unchanged) ---
   const handleAnonSubmit = async (e) => {
     e.preventDefault();
     setAnonError(""); // Clear previous form errors
@@ -218,18 +271,39 @@ const Mission3 = () => {
   const renderHealthMapList = () => (
     <div className="space-y-6">
 
-      {/* Location Bar */}
-      <div className="bg-emerald-50 dark:bg-emerald-900/40 p-3 rounded-xl flex items-center border-l-4 border-emerald-500 shadow-inner">
-        <LocateFixed className="w-5 h-5 text-emerald-700 dark:text-emerald-300 mr-3 shrink-0" />
-        <p className="text-emerald-800 dark:text-emerald-200 font-medium text-sm">
-          বর্তমান অবস্থান (ডেমো): **Dhaka, Bangladesh**
-        </p>
+      {/* Location Bar (Dynamically updated) */}
+      <div className="bg-emerald-50 dark:bg-emerald-900/40 p-3 rounded-xl flex items-start border-l-4 border-emerald-500 shadow-inner">
+        {isLocationLoading && (
+          <div className="flex items-center text-emerald-800 dark:text-emerald-200 font-medium text-sm">
+            <Loader2 className="w-5 h-5 text-emerald-700 dark:text-emerald-300 mr-3 shrink-0 animate-spin" />
+            অবস্থান লোড হচ্ছে... অনুগ্রহ করে অ্যাক্সেসের অনুমতি দিন।
+          </div>
+        )}
+        {!isLocationLoading && (
+          <>
+            <LocateFixed className="w-5 h-5 text-emerald-700 dark:text-emerald-300 mr-3 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-emerald-800 dark:text-emerald-200 font-medium text-sm">
+                বর্তমান অবস্থান:
+                {userLocation && !userLocation.isDefault
+                  ? `Lat: ${userLocation.lat.toFixed(4)}, Lng: ${userLocation.lng.toFixed(4)}`
+                  : DEFAULT_LOCATION_NAME}
+              </p>
+              {locationError && (
+                <p className="text-red-600 dark:text-red-400 text-xs mt-1">
+                  {locationError}
+                </p>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Global Loading and Error */}
+      {/* Global Loading and Error for Data */}
       {loading && <div className="text-center py-4"><Loader2 className="w-6 h-6 animate-spin text-emerald-600 mx-auto" /><p className="text-gray-600 dark:text-gray-400 mt-2">স্বাস্থ্য তথ্য লোড হচ্ছে...</p></div>}
       {globalError && <div className="p-3 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-xl flex items-center"><AlertTriangle className="w-5 h-5 mr-2" />{globalError}</div>}
 
+      {/* Facility Lists */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* Nearest Facilities List */}
@@ -254,7 +328,7 @@ const Mission3 = () => {
                 </div>
               ))
             ) : (
-              !loading && <p className="text-center text-gray-600 dark:text-gray-400">কোন নিকটবর্তী সুবিধা পাওয়া যায়নি।</p>
+              !loading && <p className="text-center text-gray-600 dark:text-gray-400">কোন নিকটবর্তী সুবিধা পাওয়া যায়নি।</p>
             )}
           </div>
         </div>
@@ -279,7 +353,7 @@ const Mission3 = () => {
                 </div>
               ))
             ) : (
-              !loading && <p className="text-center text-gray-600 dark:text-gray-400">এই এলাকায় কোনো কর্মী পাওয়া যায়নি।</p>
+              !loading && <p className="text-center text-gray-600 dark:text-gray-400">এই এলাকায় কোনো কর্মী পাওয়া যায়নি।</p>
             )}
           </div>
         </div>
@@ -294,7 +368,7 @@ const Mission3 = () => {
       <div className="p-4 bg-emerald-50 dark:bg-emerald-900/40 rounded-xl border border-emerald-200 dark:border-emerald-800">
         <div className="flex items-center mb-2">
           <ShieldCheck className="w-6 h-6 mr-3 text-emerald-700 dark:text-emerald-300" />
-          <h4 className="text-lg font-bold text-emerald-800 dark:text-emerald-200">গোপনীয়তা ও নির্ভরতা</h4>
+          <h4 className="text-lg font-bold text-emerald-800 dark:text-emerald-200">গোপনীয়তা ও নির্ভরতা</h4>
         </div>
         <p className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
           {trustInfo.privacy && (
@@ -314,7 +388,7 @@ const Mission3 = () => {
         {/* Category & Language */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center"><Hash className="w-4 h-4 mr-1 text-emerald-600" /> বিষয় নির্বাচন করুন</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center"><Hash className="w-4 h-4 mr-1 text-emerald-600" /> বিষয় নির্বাচন করুন</label>
             <select
               className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
               value={anonRequest.category}
@@ -362,7 +436,7 @@ const Mission3 = () => {
 
         {/* Symptoms */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center"><MessageSquare className="w-4 h-4 mr-1 text-emerald-600" /> উপসর্গ (কমা দিয়ে আলাদা করুন)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center"><MessageSquare className="w-4 h-4 mr-1 text-emerald-600" /> উপসর্গ (কমা দিয়ে আলাদা করুন)</label>
           <input
             type="text"
             placeholder="উদাহরণ: জ্বর, মাথা ব্যাথা, ক্লান্তি"
