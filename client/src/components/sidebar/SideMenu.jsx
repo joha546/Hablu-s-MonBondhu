@@ -1,8 +1,8 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  ChevronDown,
-  ChevronRight,
   ListChecks,
   Lock,
   LogOut,
@@ -10,118 +10,87 @@ import {
   Swords,
   User,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Mission1 from "../Mission 1/Mission1"; // Import Mission1
 
 const SideMenu = () => {
   const [user, setUser] = useState(null);
-  const [openMission, setOpenMission] = useState(null);
-  const [activeTask, setActiveTask] = useState(null);
   const [showLogout, setShowLogout] = useState(false);
-
   const navigate = useNavigate();
 
+  // Simulate authentication (replace with real auth in your app)
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    const mockAuthUser = { name: "আরিফ হোসেন", role: "কমিউনিটি ইউজার", initials: "আহ" };
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      setUser(mockAuthUser);
+    }
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      localStorage.setItem("isLoggedIn", "true");
+      setUser({ name: "আরিফ হোসেন", role: "কমিউনিটি ইউজার", initials: "আহ" });
+    }
+  }, [user]);
 
   const currentUser = user || { name: "অতিথি", role: "অননুমোদিত", initials: "অ" };
   const initials = currentUser.name
     ? currentUser.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase()
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .substring(0, 2)
+        .toUpperCase()
     : currentUser.initials;
 
   const missions = [
-    { id: 1, name: "মিশন ১: স্বাস্থ্য চেক-ইন", tasks: ["কাজ ১: সেটআপ", "কাজ ২: অনুশীলন"] },
-    { id: 2, name: "মিশন ২: স্বাস্থ্য মানচিত্র", tasks: ["কাজ ১: এলাকা মানচিত্র", "কাজ ২: তথ্য সংগ্রহ", "কাজ ৩: প্রতিবেদন"] },
-    { id: 3, name: "মিশন ৩: সহায়তা অনুরোধ", tasks: ["কাজ ১: প্রবেশ", "কাজ ২: সম্পদ সুরক্ষা", "কাজ ৩: এড়ানো", "কাজ ৪: প্রত্যাবর্তন"] },
-    { id: 4, name: "মিশন ৪: স্বাস্থ্য পরামর্শ", tasks: ["কাজ ১: পুনঃসরবরাহ", "কাজ ২: মেরামত"] },
-    { id: 5, name: "মিশন ৫: মাতৃ ও শিশু যত্ন", tasks: ["কাজ ১: সুরক্ষা", "কাজ ২: প্রতিরোধ", "কাজ ৩: প্রতিঘাত"] },
-    { id: 6, name: "মিশন ৬: সচেতনতা নির্দেশিকা", tasks: ["কাজ ১: যোগাযোগ শুরু", "কাজ ২: আলোচনার প্রস্তুতি", "কাজ ৩: চুক্তি স্বাক্ষর"] },
-    { id: 7, name: "মিশন ৭: স্বাস্থ্য অনুষ্ঠান", tasks: ["কাজ ১: প্রবেশ", "কাজ ২: তথ্য সংগ্রহ", "কাজ ৩: প্রত্যাবর্তন"] },
-    { id: 8, name: "মিশন ৮: স্বাস্থ্যকর্মী", tasks: ["কাজ ১: লক্ষ্য নির্ধারণ", "কাজ ২: পরিকল্পনা তৈরি", "কাজ ৩: কার্যকরী বাস্তবায়ন"] },
-    { id: 9, name: "মিশন ৯: স্বাস্থ্য তথ্য", tasks: ["কাজ ১: মানচিত্র তৈরি", "কাজ ২: তথ্য সংগ্রহ", "কাজ ৩: প্রতিবেদন"] },
-    { id: 10, name: "মিশন ১০: স্বাস্থ্য সহায়তা", tasks: ["কাজ ১: লক্ষ্য চিহ্নিত", "কাজ ২: ব্যাঘাত পরিকল্পনা", "কাজ ৩: বাস্তবায়ন"] },
+    { id: 1, name: "মিশন ১: স্বাস্থ্য চেক-ইন", path: "mission1" },
+    { id: 2, name: "মিশন ২: স্বাস্থ্য মানচিত্র", path: "mission2" },
+    { id: 3, name: "মিশন ৩: সহায়তা অনুরোধ", path: "mission3" },
+    { id: 4, name: "মিশন ৪: স্বাস্থ্য পরামর্শ", path: "mission4" },
+    { id: 5, name: "মিশন ৫: মাতৃ ও শিশু যত্ন", path: "mission5" },
+    { id: 6, name: "মিশন ৬: সচেতনতা নির্দেশিকা", path: "mission6" },
+    { id: 7, name: "মিশন ৭: স্বাস্থ্য অনুষ্ঠান", path: "mission7" },
+    { id: 8, name: "মিশন ৮: স্বাস্থ্যকর্মী", path: "mission8" },
+    { id: 9, name: "মিশন ৯: স্বাস্থ্য তথ্য", path: "mission9" },
+    { id: 10, name: "মিশন ১০: স্বাস্থ্য সহায়তা", path: "mission10" },
   ];
 
-  const toggleMission = (id) => setOpenMission(openMission === id ? null : id);
-  const handleTaskClick = (missionId, taskName) =>
-    setActiveTask({ missionId, taskName });
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    localStorage.removeItem("isLoggedIn");
     setUser(null);
     navigate("/");
   };
 
-  const getActiveMission = () => {
-    if (!activeTask) return null;
-    return missions.find((m) => m.id === activeTask.missionId);
-  };
-  const activeMissionData = getActiveMission();
   const isAuthenticated = user !== null;
 
   return (
     <div className="flex min-h-screen bg-gray-100 font-sans">
       {/* Sidebar */}
-      <div className="w-78 bg-[#1f2937] text-white p-5 flex flex-col justify-between shadow-xl">
+      <div className="w-78 bg-[#1f2937] text-white p-5 flex flex-col justify-between shadow-xl min-w-[280px]">
         <div>
-          {/* Logo/Title Section */}
+          {/* Logo */}
           <div className="flex items-center text-3xl font-extrabold text-[#10b981] mb-6 border-b border-gray-700/50 pb-3">
             <Swords className="mr-3 w-8 h-8" />
             হাবলু ২.০
           </div>
 
-          {/* Missions List */}
+          {/* Missions */}
           {isAuthenticated ? (
             <ul className="space-y-1 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
               {missions.map((mission) => (
                 <li key={mission.id}>
-                  <button
-                    onClick={() => toggleMission(mission.id)}
-                    className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${openMission === mission.id
-                      ? "bg-[#10b981] text-white shadow-lg"
-                      : "text-gray-200 hover:bg-gray-700/50 hover:text-white"
-                      }`}
+                  <NavLink
+                    to={mission.path}
+                    className={({ isActive }) =>
+                      `w-full flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        isActive
+                          ? "bg-[#10b981] text-white shadow-lg"
+                          : "text-gray-200 hover:bg-gray-700/50 hover:text-white"
+                      }`
+                    }
                   >
-                    <span className="flex items-center">
-                      <ListChecks className="mr-2 w-4 h-4" />
-                      {mission.name}
-                    </span>
-                    {openMission === mission.id ? (
-                      <ChevronDown size={16} className="ml-2" />
-                    ) : (
-                      <ChevronRight size={16} className="ml-2" />
-                    )}
-                  </button>
-
-                  {openMission === mission.id && (
-                    <ul className="pl-6 pt-1 pb-1 space-y-0.5 border-l-2 border-gray-700 ml-3">
-                      {mission.tasks.map((task, index) => {
-                        const isActive =
-                          activeTask?.missionId === mission.id &&
-                          activeTask?.taskName === task;
-                        return (
-                          <li
-                            key={index}
-                            onClick={() => handleTaskClick(mission.id, task)}
-                            className={`px-3 py-1 text-sm rounded-md cursor-pointer transition-colors duration-150 ${isActive
-                              ? "bg-gray-600 text-[#10b981] font-semibold"
-                              : "text-gray-300 hover:bg-gray-700/70 hover:text-white"
-                              }`}
-                          >
-                            {task}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
+                    <ListChecks className="mr-2 w-4 h-4" />
+                    {mission.name}
+                  </NavLink>
                 </li>
               ))}
             </ul>
@@ -179,44 +148,8 @@ const SideMenu = () => {
       </div>
 
       {/* Right Content Area */}
-      <div className="flex-1 p-8">
-        {isAuthenticated && activeTask ? (
-          <>
-            {/* Render Mission1 only for মিশন ১ -> কাজ ১ */}
-            {activeTask.taskName === "কাজ ১: সেটআপ" && activeMissionData?.id === 1 ? (
-              <Mission1 />
-            ) : (
-              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                <p className="text-lg text-gray-500 mb-2">বর্তমান সক্রিয় কাজ:</p>
-                <h3 className="text-2xl font-semibold text-[#10b981] mb-4">
-                  {activeMissionData?.name}
-                </h3>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-xl font-bold text-gray-800">
-                    <span className="font-normal text-gray-600 mr-2">কাজের নাম:</span> {activeTask.taskName}
-                  </p>
-                  <p className="mt-3 text-gray-600">
-                    <strong>{activeMissionData?.name}</strong> মিশনের{" "}
-                    <strong>{activeTask.taskName}</strong> সংক্রান্ত বিস্তারিত তথ্য এখানে প্রদর্শিত হবে।
-                  </p>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center py-12">
-            <p className="text-xl font-medium text-gray-700">
-              {isAuthenticated
-                ? "বাম দিকের সাইডবার থেকে একটি মিশন ও কাজ নির্বাচন করুন।"
-                : "আপনাকে লগইন করতে হবে ড্যাশবোর্ড অ্যাক্সেসের জন্য।"}
-            </p>
-            <p className="mt-2 text-gray-500">
-              {isAuthenticated
-                ? "ড্যাশবোর্ডে নির্বাচিত কাজের বিস্তারিত দেখা যাবে।"
-                : "চালিয়ে যেতে লগইন/সাইন আপ বাটন ব্যবহার করুন।"}
-            </p>
-          </div>
-        )}
+      <div className="flex-1 p-8 overflow-y-auto">
+        <Outlet /> {/* Renders nested mission routes */}
       </div>
     </div>
   );
