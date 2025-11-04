@@ -27,7 +27,7 @@ const moodLogSchema = new mongoose.Schema({
   // Store mood labels in Bangla
   mood_label: {
     type: String,
-    enum: ["খুব খারাপ", "খারাপ", "সাধারণ", "�ালো", "খুব ভালো"]
+    enum: ["খুব খারাপ", "খারাপ", "সাধারণ", "খুব ভালো"]
   }
 }, {
   timestamps: true

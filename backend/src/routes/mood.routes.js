@@ -1,4 +1,3 @@
-// backend/src/routes/mood.routes.js
 import express from "express";
 import MoodLog from "../models/MoodLog.model.js";
 import {
@@ -6,11 +5,12 @@ import {
     generatePersonalizedGreeting,
 } from "../utils/aiService.js";
 import { logger } from "../utils/logger.js";
+import {authMiddleware} from "../middleware/auth.js";
 
 const router = express.Router();
 
 // Apply authentication middleware to all routes
-// router.use(authMiddleware);
+router.use(authMiddleware);
 
 /**
  * @swagger
