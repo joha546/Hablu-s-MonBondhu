@@ -11,6 +11,7 @@ import seasonalHealthRoutes from "./routes/seasonalHealth.routes.js";
 import maternalChildHealthRoutes from "./routes/maternalChildHealth.routes.js";
 import symptomGuideRoutes from "./routes/symptomGuide.routes.js";
 import healthEventsRoutes from "./routes/healthEvents.routes.js";
+import healthWorkerRoutes from "./routes/healthWorker.routes.js";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.js";
 
@@ -23,7 +24,6 @@ app.use(cors());
 app.use(helmet());
 app.use(express.json());
 app.use(requestLogger);  // logs incoming requests.
-
 app.get('/api/healthCheck', (req, res) => {
     res.status(200).json({message: 'It is working'});
 })
@@ -37,6 +37,7 @@ app.use("/api/seasonal-health", seasonalHealthRoutes);
 app.use("/api/maternal-child-health", maternalChildHealthRoutes);
 app.use("/api/symptom-guide", symptomGuideRoutes);
 app.use("/api/health-events", healthEventsRoutes);
+app.use("/api/health-workers", healthWorkerRoutes)
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 404 handler
