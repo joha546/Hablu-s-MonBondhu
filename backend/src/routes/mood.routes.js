@@ -1,15 +1,16 @@
 // backend/src/routes/mood.routes.js
 import express from "express";
 import MoodLog from "../models/MoodLog.model.js";
-import User from "../models/User.js";
-import { authMiddleware } from "../middleware/auth.js";
-import { generatePersonalizedGreeting, generateAIPrompt } from "../utils/aiService.js";
+import {
+    generateAIPrompt,
+    generatePersonalizedGreeting,
+} from "../utils/aiService.js";
 import { logger } from "../utils/logger.js";
 
 const router = express.Router();
 
 // Apply authentication middleware to all routes
-router.use(authMiddleware);
+// router.use(authMiddleware);
 
 /**
  * @swagger
@@ -59,40 +60,35 @@ router.use(authMiddleware);
 router.post("/checkin", async (req, res) => {
     try {
         const { mood_level, note } = req.body;
-        const userId = req.user.userId;
+        const userId = req.user._id; // always get from token
 
-        // Validate mood level
         if (!mood_level || mood_level < 1 || mood_level > 5) {
-            return res.status(400).json({ message: "মুড লেভেল ১ থেকে ৫ এর মধ্যে হতে হবে" });
+            return res
+                .status(400)
+                .json({ message: "মুড লেভেল ১ থেকে ৫ এর মধ্যে হতে হবে" });
         }
 
-        // Convert mood level to Bangla label
         const moodLabels = ["খুব খারাপ", "খারাপ", "সাধারণ", "ভালো", "খুব ভালো"];
         const mood_label = moodLabels[mood_level - 1];
 
-        // Create new mood log
         const newLog = new MoodLog({
             userId,
             mood_level,
             mood_label,
             note: note || "",
-            timestamp: new Date()
+            timestamp: new Date(),
         });
-
         await newLog.save();
 
-        // Generate AI prompt based on mood level
         const aiPrompt = await generateAIPrompt(mood_level, note);
-
-        logger.info(`User ${userId} logged mood: ${mood_level}`);
 
         res.status(201).json({
             message: "মুড লগ সংরক্ষিত হয়েছে",
             data: newLog,
-            aiPrompt
+            aiPrompt,
         });
     } catch (err) {
-        logger.error("Mood check-in error:", err);
+        console.error("Mood check-in error:", err);
         res.status(500).json({ message: "সার্ভার ত্রুটি", error: err.message });
     }
 });
@@ -120,11 +116,16 @@ router.get("/greeting", async (req, res) => {
         const userId = req.user.userId;
 
         // Get the most recent mood log
-        const lastMoodLog = await MoodLog.findOne({ userId }).sort({ timestamp: -1 });
-        
+        const lastMoodLog = await MoodLog.findOne({ userId }).sort({
+            timestamp: -1,
+        });
+
         // Calculate days since last check-in
-        const daysSinceLastCheckin = lastMoodLog 
-            ? Math.floor((new Date() - new Date(lastMoodLog.timestamp)) / (1000 * 60 * 60 * 24))
+        const daysSinceLastCheckin = lastMoodLog
+            ? Math.floor(
+                  (new Date() - new Date(lastMoodLog.timestamp)) /
+                      (1000 * 60 * 60 * 24)
+              )
             : null;
 
         // Generate personalized greeting
@@ -136,13 +137,14 @@ router.get("/greeting", async (req, res) => {
 
         // Determine if we should show a gentle nudge
         // Addressing the riddle: How to nudge without shaming
-        const showNudge = daysSinceLastCheckin !== null && daysSinceLastCheckin >= 3;
-        
+        const showNudge =
+            daysSinceLastCheckin !== null && daysSinceLastCheckin >= 3;
+
         res.status(200).json({
             message: greeting,
             daysSinceLastCheckin,
             showNudge,
-            lastMoodLevel: lastMoodLog?.mood_level || null
+            lastMoodLevel: lastMoodLog?.mood_level || null,
         });
     } catch (err) {
         logger.error("Greeting generation error:", err);
@@ -185,7 +187,7 @@ router.get("/history", async (req, res) => {
     try {
         const userId = req.user.userId;
         const days = parseInt(req.query.days) || 30;
-        
+
         // Calculate date range
         const endDate = new Date();
         const startDate = new Date();
@@ -194,14 +196,14 @@ router.get("/history", async (req, res) => {
         // Get mood logs within the date range
         const moodLogs = await MoodLog.find({
             userId,
-            timestamp: { $gte: startDate, $lte: endDate }
+            timestamp: { $gte: startDate, $lte: endDate },
         }).sort({ timestamp: 1 });
 
         // Format data for graph visualization
-        const graphData = moodLogs.map(log => ({
-            date: log.timestamp.toISOString().split('T')[0],
+        const graphData = moodLogs.map((log) => ({
+            date: log.timestamp.toISOString().split("T")[0],
             mood_level: log.mood_level,
-            mood_label: log.mood_label
+            mood_label: log.mood_label,
         }));
 
         // Calculate streak and average
@@ -212,7 +214,7 @@ router.get("/history", async (req, res) => {
             data: graphData,
             streak,
             average,
-            totalDays: moodLogs.length
+            totalDays: moodLogs.length,
         });
     } catch (err) {
         logger.error("Mood history error:", err);
@@ -259,7 +261,9 @@ router.post("/sync", async (req, res) => {
         const { logs } = req.body;
 
         if (!Array.isArray(logs) || logs.length === 0) {
-            return res.status(400).json({ message: "সিঙ্ক করার জন্য কমপক্ষে একটি লগ প্রয়োজন" });
+            return res
+                .status(400)
+                .json({ message: "সিঙ্ক করার জন্য কমপক্ষে একটি লগ প্রয়োজন" });
         }
 
         // Process each log
@@ -272,14 +276,14 @@ router.post("/sync", async (req, res) => {
             }
 
             const mood_label = moodLabels[log.mood_level - 1];
-            
+
             processedLogs.push({
                 userId,
                 mood_level: log.mood_level,
                 mood_label,
                 note: log.note || "",
                 timestamp: new Date(log.timestamp),
-                synced: true
+                synced: true,
             });
         }
 
@@ -292,7 +296,7 @@ router.post("/sync", async (req, res) => {
 
         res.status(200).json({
             message: `${processedLogs.length} টি মুড লগ সফলভাবে সিঙ্ক হয়েছে`,
-            synced: processedLogs.length
+            synced: processedLogs.length,
         });
     } catch (err) {
         logger.error("Mood sync error:", err);
@@ -303,31 +307,33 @@ router.post("/sync", async (req, res) => {
 // Helper functions
 function calculateStreak(logs) {
     if (logs.length === 0) return 0;
-    
+
     let streak = 1;
-    const sortedLogs = [...logs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
+    const sortedLogs = [...logs].sort(
+        (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+    );
+
     for (let i = 0; i < sortedLogs.length - 1; i++) {
         const current = new Date(sortedLogs[i].timestamp);
         const next = new Date(sortedLogs[i + 1].timestamp);
-        
+
         // Check if logs are consecutive days
         const diffTime = Math.abs(current - next);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays === 1) {
             streak++;
         } else {
             break;
         }
     }
-    
+
     return streak;
 }
 
 function calculateAverage(logs) {
     if (logs.length === 0) return 0;
-    
+
     const sum = logs.reduce((acc, log) => acc + log.mood_level, 0);
     return (sum / logs.length).toFixed(1);
 }

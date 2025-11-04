@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import {
   ChevronDown,
   ChevronRight,
-  LogOut,
-  Swords,
   ListChecks,
-  User,
-  Settings,
   Lock,
+  LogOut,
+  Settings,
+  Swords,
+  User,
 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Mission1 from "../Mission 1/Mission1"; // Import Mission1
 
 const SideMenu = () => {
   const [user, setUser] = useState(null);
@@ -29,11 +30,11 @@ const SideMenu = () => {
   const currentUser = user || { name: "অতিথি", role: "অননুমোদিত", initials: "অ" };
   const initials = currentUser.name
     ? currentUser.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .substring(0, 2)
-        .toUpperCase()
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase()
     : currentUser.initials;
 
   const missions = [
@@ -84,11 +85,10 @@ const SideMenu = () => {
                 <li key={mission.id}>
                   <button
                     onClick={() => toggleMission(mission.id)}
-                    className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                      openMission === mission.id
-                        ? "bg-[#10b981] text-white shadow-lg"
-                        : "text-gray-200 hover:bg-gray-700/50 hover:text-white"
-                    }`}
+                    className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${openMission === mission.id
+                      ? "bg-[#10b981] text-white shadow-lg"
+                      : "text-gray-200 hover:bg-gray-700/50 hover:text-white"
+                      }`}
                   >
                     <span className="flex items-center">
                       <ListChecks className="mr-2 w-4 h-4" />
@@ -111,11 +111,10 @@ const SideMenu = () => {
                           <li
                             key={index}
                             onClick={() => handleTaskClick(mission.id, task)}
-                            className={`px-3 py-1 text-sm rounded-md cursor-pointer transition-colors duration-150 ${
-                              isActive
-                                ? "bg-gray-600 text-[#10b981] font-semibold"
-                                : "text-gray-300 hover:bg-gray-700/70 hover:text-white"
-                            }`}
+                            className={`px-3 py-1 text-sm rounded-md cursor-pointer transition-colors duration-150 ${isActive
+                              ? "bg-gray-600 text-[#10b981] font-semibold"
+                              : "text-gray-300 hover:bg-gray-700/70 hover:text-white"
+                              }`}
                           >
                             {task}
                           </li>
@@ -134,23 +133,17 @@ const SideMenu = () => {
           )}
         </div>
 
-        {/* --- User Profile & Logout Section --- */}
+        {/* User Profile & Logout */}
         <div className="border-t border-gray-700/50 pt-4 space-y-3">
-          {/* User Card */}
           <div className="flex items-center p-2 rounded-lg bg-gray-800/50">
             <div className="w-10 h-10 bg-[#10b981] rounded-full flex items-center justify-center text-lg font-bold text-white shadow-md mr-3 shrink-0">
               {isAuthenticated ? initials : <User className="w-5 h-5" />}
             </div>
             <div className="grow min-w-0">
-              <p
-                className="text-sm font-semibold text-white truncate"
-                title={currentUser.name}
-              >
+              <p className="text-sm font-semibold text-white truncate" title={currentUser.name}>
                 {currentUser.name}
               </p>
-              <p className="text-xs text-gray-400 truncate">
-                {currentUser.role || "ব্যবহারকারী"}
-              </p>
+              <p className="text-xs text-gray-400 truncate">{currentUser.role || "ব্যবহারকারী"}</p>
             </div>
             {isAuthenticated && (
               <button
@@ -187,30 +180,29 @@ const SideMenu = () => {
 
       {/* Right Content Area */}
       <div className="flex-1 p-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6 pb-3">
-          ড্যাশবোর্ড ওভারভিউ
-        </h2>
-
         {isAuthenticated && activeTask ? (
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-            <p className="text-lg text-gray-500 mb-2">বর্তমান সক্রিয় কাজ:</p>
-            <h3 className="text-2xl font-semibold text-[#10b981] mb-4">
-              {activeMissionData?.name}
-            </h3>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-xl font-bold text-gray-800">
-                <span className="font-normal text-gray-600 mr-2">
-                  কাজের নাম:
-                </span>{" "}
-                {activeTask.taskName}
-              </p>
-              <p className="mt-3 text-gray-600">
-                <strong>{activeMissionData?.name}</strong> মিশনের{" "}
-                <strong>{activeTask.taskName}</strong> সংক্রান্ত বিস্তারিত তথ্য
-                এখানে প্রদর্শিত হবে।
-              </p>
-            </div>
-          </div>
+          <>
+            {/* Render Mission1 only for মিশন ১ -> কাজ ১ */}
+            {activeTask.taskName === "কাজ ১: সেটআপ" && activeMissionData?.id === 1 ? (
+              <Mission1 />
+            ) : (
+              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <p className="text-lg text-gray-500 mb-2">বর্তমান সক্রিয় কাজ:</p>
+                <h3 className="text-2xl font-semibold text-[#10b981] mb-4">
+                  {activeMissionData?.name}
+                </h3>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-xl font-bold text-gray-800">
+                    <span className="font-normal text-gray-600 mr-2">কাজের নাম:</span> {activeTask.taskName}
+                  </p>
+                  <p className="mt-3 text-gray-600">
+                    <strong>{activeMissionData?.name}</strong> মিশনের{" "}
+                    <strong>{activeTask.taskName}</strong> সংক্রান্ত বিস্তারিত তথ্য এখানে প্রদর্শিত হবে।
+                  </p>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center py-12">
             <p className="text-xl font-medium text-gray-700">
