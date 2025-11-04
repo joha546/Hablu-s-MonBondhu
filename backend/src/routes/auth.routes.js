@@ -193,7 +193,7 @@ router.post('/resend-otp', async (req, res) => {
 // Get user profile (protected route)
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password -otp -otpExpires');
+    const user = await User.findById(req.user._id).select('-password -otp -otpExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
