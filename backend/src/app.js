@@ -13,6 +13,7 @@ import maternalChildHealthRoutes from "./routes/maternalChildHealth.routes.js";
 import moodRoutes from "./routes/mood.routes.js";
 import seasonalHealthRoutes from "./routes/seasonalHealth.routes.js";
 import symptomGuideRoutes from "./routes/symptomGuide.routes.js";
+import healthAnalyticsRoutes from "./routes/healthAnalytics.routes.js";
 import { logger, requestLogger } from "./utils/logger.js";
 
 dotenv.config();
@@ -39,6 +40,7 @@ app.use("/api/maternal-child-health", maternalChildHealthRoutes);
 app.use("/api/symptom-guide", symptomGuideRoutes);
 app.use("/api/health-events", healthEventsRoutes);
 app.use("/api/health-workers", healthWorkerRoutes);
+app.use("/api/health-analytics", healthAnalyticsRoutes);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 404 handler
