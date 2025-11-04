@@ -1,7 +1,6 @@
-import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import SideMenu from "./components/sidebar/SideMenu";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Mission1 from "./components/Mission 1/Mission1";
+import Mission10 from "./components/Mission 10/Mission10";
 import Mission2 from "./components/Mission 2/Mission2";
 import Mission3 from "./components/Mission 3/Mission3";
 import Mission4 from "./components/Mission 4/Mission4";
@@ -10,7 +9,7 @@ import Mission6 from "./components/Mission 6/Mission6";
 import Mission7 from "./components/Mission 7/Mission7";
 import Mission8 from "./components/Mission 8/Mission8";
 import Mission9 from "./components/Mission 9/Mission9";
-import Mission10 from "./components/Mission 10/Mission10";
+import SideMenu from "./components/sidebar/SideMenu";
 
 
 // Optional Home Page

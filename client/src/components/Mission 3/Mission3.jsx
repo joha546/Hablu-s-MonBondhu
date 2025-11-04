@@ -1,79 +1,172 @@
-import { default as React, useEffect, useState } from "react";
-import apiClient from "../../lib/api";
+import {
+  AlertTriangle,
+  Clock,
+  Globe,
+  Hash,
+  HeartHandshake,
+  Loader2,
+  LocateFixed,
+  MessageSquare,
+  Send,
+  ShieldCheck,
+  Stethoscope,
+  UserCheck,
+  Users,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+// --- MOCK API IMPLEMENTATION (Replacing external import) ---
+// This section simulates the backend responses for demonstration purposes.
+
+const MOCK_NEAREST = [
+  { _id: "f1", name: "Dhaka Medical College Hospital", type: "Hospital", distance: 1200 },
+  { _id: "f2", name: "Mohakhali Health Clinic", type: "Clinic", distance: 2500 },
+  { _id: "f3", name: "Tejgaon Community Health Center", type: "Center", distance: 4800 },
+];
+
+const MOCK_WORKERS = [
+  { _id: "w1", name: "রহিম মিয়া", skills: ["প্রাথমিক চিকিৎসা", "টিকা"] },
+  { _id: "w2", name: "জেসমিন আক্তার", skills: ["মাতৃত্বকালীন যত্ন", "পুষ্টি পরামর্শ"] },
+  { _id: "w3", name: "কামাল হোসেন", skills: ["জরুরী সাড়া", "রোগ নিয়ন্ত্রণ"] },
+];
+
+const MOCK_CATEGORIES = {
+  categories: [
+    { id: "fever", name: "জ্বর ও ঠান্ডা" },
+    { id: "pain", name: "শরীরের ব্যথা" },
+    { id: "child", name: "শিশু স্বাস্থ্য" },
+    { id: "mental", name: "মানসিক স্বাস্থ্য" },
+    { id: "general", name: "সাধারণ স্বাস্থ্য" },
+  ]
+};
+
+const MOCK_TRUST_INFO = {
+  privacy: {
+    anonymous: "আপনার পরিচয় গোপন রাখা হবে।",
+    noTracking: "আপনার কোনো ব্যক্তিগত ডেটা ট্র্যাক করা হয় না।",
+    dataRetention: "পরামর্শের পর তথ্য মুছে ফেলা হয়।",
+    encryption: "সমস্ত যোগাযোগ এনক্রিপ্ট করা হয়।"
+  }
+};
+
+const MOCK_ANON_RESPONSE = {
+  response: {
+    primaryAdvice: "দ্রুত একজন ডাক্তারের সাথে পরামর্শ করুন। এটি সাধারণ ফ্লু হতে পারে।",
+    immediateActions: "পর্যাপ্ত বিশ্রাম নিন, প্যারাসিটামল খান এবং প্রচুর পানি পান করুন।",
+    culturalConsiderations: "পরিবারের বয়স্ক সদস্যদের থেকে দূরত্ব বজায় রাখুন এবং ঐতিহ্যবাহী খাবার খেতে পারেন যা আরোগ্য লাভে সহায়তা করে।"
+  }
+};
+
+const apiClient = {
+  get: (url, config = {}) => {
+    // reference config to avoid "assigned but never used" lint warnings
+    const params = config.params || {};
+    return new Promise(resolve => {
+      setTimeout(() => {
+        if (url === "/anonymous-health/categories") {
+          resolve({ data: MOCK_CATEGORIES });
+        } else if (url === "/anonymous-health/trust-info") {
+          resolve({ data: MOCK_TRUST_INFO });
+        } else if (url === "/healthmap/workers") {
+          // optionally simulate simple param-based behavior (e.g., limit)
+          const limit = params.limit || MOCK_WORKERS.length;
+          resolve({ data: MOCK_WORKERS.slice(0, limit) });
+        } else {
+          resolve({ data: [] });
+        }
+      }, 500); // Simulate network latency
+    });
+  },
+  post: (url, data) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (url === "/healthmap/nearest") {
+          resolve({ data: MOCK_NEAREST });
+        } else if (url === "/anonymous-health/request") {
+          if (!data.category || data.symptoms.length === 0 || data.symptoms[0].length === 0) {
+            // Basic form validation simulation
+            reject({ response: { data: { message: "অনুগ্রহ করে বিষয় এবং উপসর্গ লিখুন।" } } });
+          }
+          resolve({ data: MOCK_ANON_RESPONSE });
+        } else {
+          reject({ response: { data: { message: "Invalid endpoint." } } });
+        }
+      }, 1000); // Simulate longer AI processing time
+    });
+  }
+};
+// --- END MOCK API IMPLEMENTATION ---
 
 
-
-const Mission2 = () => {
-  const [facilities, setFacilities] = useState([]);
+const Mission3 = () => {
+  // --- STATE FOR HEALTH MAP ---
   const [nearest, setNearest] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [globalError, setGlobalError] = useState("");
 
-  // Anonymous Health states
+  // --- STATE FOR ANONYMOUS HEALTH ---
   const [categories, setCategories] = useState([]);
   const [trustInfo, setTrustInfo] = useState({});
   const [anonRequest, setAnonRequest] = useState({
     category: "",
     severity: "mild",
-    symptoms: [],
+    symptoms: "", // Changed to string for easier input handling
     ageGroup: "adult",
     gender: "prefer_not_to_say",
-    location: "",
+    location: "Dhaka",
     urgency: "information",
     preferredLanguage: "bangla",
     culturalContext: "",
   });
   const [anonResponse, setAnonResponse] = useState(null);
   const [anonLoading, setAnonLoading] = useState(false);
+  const [anonError, setAnonError] = useState(""); // Dedicated error for form submission
 
-  const userLocation = [90.4125, 23.8103]; // Dhaka coordinates demo
+  // UI State
+  const [activeTab, setActiveTab] = useState('map'); // 'map' or 'anon'
 
-  // Fetch Health Map data
-  const fetchFacilities = async () => {
+  // Map Data
+  const userApiLocation = useMemo(() => [90.4125, 23.8103], []); // [lng, lat] for API (Dhaka demo)
+
+  // --- CONSOLIDATED API HELPER FUNCTION ---
+  const apiCall = useCallback(async (endpoint, setter, errorMessage, method = 'get', data = {}) => {
     try {
+      // Only show global loading/error for the map data fetches
       setLoading(true);
-      const response = await apiClient.get("/healthmap/facilities");
-      setFacilities(response.data);
+      setGlobalError("");
+
+      let response;
+      if (method === 'post') {
+        response = await apiClient.post(endpoint, data);
+      } else {
+        response = await apiClient.get(endpoint, { params: data });
+      }
+
+      setter(response.data);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch facilities");
+      console.error(`${errorMessage} error:`, err);
+      // Ensure we access the message property correctly from the mock API error structure
+      const errorMsg = err.response?.data?.message || `❌ ${errorMessage} failed.`;
+      setGlobalError(errorMsg);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchNearest = async () => {
-    try {
-      setLoading(true);
-      const response = await apiClient.post("/healthmap/nearest", {
-        location: userLocation,
-        limit: 5,
-        maxDistance: 5000,
-      });
-      setNearest(response.data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch nearest facilities");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // --- DATA FETCHERS ---
+  const fetchNearest = useCallback(() => apiCall("/healthmap/nearest", setNearest, "Nearest facilities fetch failed", 'post', {
+    location: userApiLocation,
+    limit: 5,
+    maxDistance: 5000,
+  }), [apiCall, userApiLocation]);
 
-  const fetchWorkers = async () => {
-    try {
-      setLoading(true);
-      const response = await apiClient.get("/healthmap/workers", {
-        params: { location: userLocation.join(","), radius: 3000 },
-      });
-      setWorkers(response.data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch health workers");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchWorkers = useCallback(() => apiCall("/healthmap/workers", setWorkers, "Health workers fetch failed", 'get', {
+    location: userApiLocation.join(","),
+    radius: 3000,
+  }), [apiCall, userApiLocation]);
 
-  // Fetch Anonymous Health categories & trust info
-  const fetchAnonymousMeta = async () => {
+  const fetchAnonymousMeta = useCallback(async () => {
     try {
       const [catRes, trustRes] = await Promise.all([
         apiClient.get("/anonymous-health/categories"),
@@ -84,130 +177,292 @@ const Mission2 = () => {
     } catch (err) {
       console.error("Anonymous meta fetch error:", err);
     }
-  };
+  }, []);
 
+  // --- EFFECT FOR INITIAL DATA LOAD ---
+  useEffect(() => {
+    // Only fetching nearest and workers, as the "All Facilities" list is often too long for a good UI
+    fetchNearest();
+    fetchWorkers();
+    fetchAnonymousMeta();
+  }, [fetchNearest, fetchWorkers, fetchAnonymousMeta]);
+
+  // --- ANONYMOUS REQUEST HANDLER ---
   const handleAnonSubmit = async (e) => {
     e.preventDefault();
+    setAnonError(""); // Clear previous form errors
     try {
       setAnonLoading(true);
       setAnonResponse(null);
-      const response = await apiClient.post("/anonymous-health/request", anonRequest);
+
+      const payload = {
+        ...anonRequest,
+        // Convert comma-separated string back to array for API
+        symptoms: anonRequest.symptoms.split(",").map(s => s.trim()).filter(s => s.length > 0)
+      };
+
+      const response = await apiClient.post("/anonymous-health/request", payload);
       setAnonResponse(response.data.response);
     } catch (err) {
       console.error("Anonymous request error:", err);
-      alert(err.response?.data?.message || "Request failed");
+      // Using in-app message instead of alert() and ensuring correct error access
+      const errorMsg = err.response?.data?.message || "❌ অনুরোধ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";
+      setAnonError(errorMsg);
     } finally {
       setAnonLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchFacilities();
-    fetchNearest();
-    fetchWorkers();
-    fetchAnonymousMeta();
-  }, []);
+  // --- RENDERING FUNCTIONS FOR TABS ---
 
-  return (
-    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 max-w-3xl mx-auto mt-6 space-y-6">
-      <h2 className="text-2xl font-bold text-emerald-600 text-center">
-        Mission 2: Health Map & Anonymous Health
-      </h2>
+  const renderHealthMapList = () => (
+    <div className="space-y-6">
 
-      {/* Health Map Section */}
-      {loading && <p className="text-center text-gray-500">Loading Health Map...</p>}
-      {error && <p className="text-red-600 text-center">{error}</p>}
-
-      <div>
-        <h3 className="font-semibold text-lg mb-2 text-emerald-700">All Facilities:</h3>
-        <ul className="list-disc list-inside">
-          {facilities.map(f => (
-            <li key={f._id}>{f.name} ({f.type}) - {f.upazila}, {f.district}</li>
-          ))}
-        </ul>
+      {/* Location Bar */}
+      <div className="bg-emerald-50 dark:bg-emerald-900/40 p-3 rounded-xl flex items-center border-l-4 border-emerald-500 shadow-inner">
+        <LocateFixed className="w-5 h-5 text-emerald-700 dark:text-emerald-300 mr-3 shrink-0" />
+        <p className="text-emerald-800 dark:text-emerald-200 font-medium text-sm">
+          বর্তমান অবস্থান (ডেমো): **Dhaka, Bangladesh**
+        </p>
       </div>
 
-      <div>
-        <h3 className="font-semibold text-lg mb-2 text-emerald-700">Nearest Facilities:</h3>
-        <ul className="list-disc list-inside">
-          {nearest.map(f => (
-            <li key={f._id}>{f.name} ({f.type}) - Distance: {f.distance ? Math.round(f.distance) + "m" : "N/A"}</li>
-          ))}
-        </ul>
+      {/* Global Loading and Error */}
+      {loading && <div className="text-center py-4"><Loader2 className="w-6 h-6 animate-spin text-emerald-600 mx-auto" /><p className="text-gray-600 dark:text-gray-400 mt-2">স্বাস্থ্য তথ্য লোড হচ্ছে...</p></div>}
+      {globalError && <div className="p-3 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-xl flex items-center"><AlertTriangle className="w-5 h-5 mr-2" />{globalError}</div>}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        {/* Nearest Facilities List */}
+        <div className="p-5 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 shadow-lg">
+          <div className="flex items-center mb-4 border-b pb-2 border-gray-200 dark:border-gray-600">
+            <Stethoscope className="w-6 h-6 mr-3 text-emerald-600 dark:text-emerald-400" />
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">নিকটবর্তী সুবিধা ({nearest.length})</h3>
+          </div>
+          <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+            {nearest.length > 0 ? (
+              nearest.map((f, index) => (
+                <div key={f._id || index} className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm flex items-center transition hover:bg-emerald-50 dark:hover:bg-gray-700">
+                  <HeartHandshake className="w-5 h-5 mr-3 shrink-0 text-red-500" />
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                      {f.name} <span className="text-sm font-normal text-gray-500 dark:text-gray-400">({f.type})</span>
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      দূরত্ব: <span className="font-bold text-emerald-700 dark:text-emerald-300">{f.distance ? Math.round(f.distance) + "m" : "N/A"}</span>
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              !loading && <p className="text-center text-gray-600 dark:text-gray-400">কোন নিকটবর্তী সুবিধা পাওয়া যায়নি।</p>
+            )}
+          </div>
+        </div>
+
+        {/* Nearby Health Workers List */}
+        <div className="p-5 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 shadow-lg">
+          <div className="flex items-center mb-4 border-b pb-2 border-gray-200 dark:border-gray-600">
+            <Users className="w-6 h-6 mr-3 text-emerald-600 dark:text-emerald-400" />
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">নিকটবর্তী স্বাস্থ্য কর্মী ({workers.length})</h3>
+          </div>
+          <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+            {workers.length > 0 ? (
+              workers.map((w, index) => (
+                <div key={w._id || index} className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm flex items-center transition hover:bg-emerald-50 dark:hover:bg-gray-700">
+                  <UserCheck className="w-5 h-5 mr-3 shrink-0 text-blue-600" />
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-white">{w.name}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      দক্ষতা: <span className="font-medium text-blue-700 dark:text-blue-300">{w.skills?.join(", ") || "N/A"}</span>
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              !loading && <p className="text-center text-gray-600 dark:text-gray-400">এই এলাকায় কোনো কর্মী পাওয়া যায়নি।</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAnonForm = () => (
+    <div className="space-y-6">
+
+      {/* Trust & Privacy Info */}
+      <div className="p-4 bg-emerald-50 dark:bg-emerald-900/40 rounded-xl border border-emerald-200 dark:border-emerald-800">
+        <div className="flex items-center mb-2">
+          <ShieldCheck className="w-6 h-6 mr-3 text-emerald-700 dark:text-emerald-300" />
+          <h4 className="text-lg font-bold text-emerald-800 dark:text-emerald-200">গোপনীয়তা ও নির্ভরতা</h4>
+        </div>
+        <p className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+          {trustInfo.privacy && (
+            <>
+              <p>• {trustInfo.privacy.anonymous}</p>
+              <p>• {trustInfo.privacy.noTracking}</p>
+            </>
+          )}
+          <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+            **জরুরী অবস্থা বা গুরুতর স্বাস্থ্য সমস্যার জন্য এটি ব্যবহার করবেন না। সরাসরি ডাক্তার বা হাসপাতালের সাথে যোগাযোগ করুন।**
+          </p>
+        </p>
       </div>
 
-      <div>
-        <h3 className="font-semibold text-lg mb-2 text-emerald-700">Nearby Health Workers:</h3>
-        <ul className="list-disc list-inside">
-          {workers.map(w => (
-            <li key={w._id}>{w.name} - Skills: {w.skills?.join(", ") || "N/A"}</li>
-          ))}
-        </ul>
-      </div>
+      {/* Form */}
+      <form className="space-y-4" onSubmit={handleAnonSubmit}>
+        {/* Category & Language */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center"><Hash className="w-4 h-4 mr-1 text-emerald-600" /> বিষয় নির্বাচন করুন</label>
+            <select
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+              value={anonRequest.category}
+              onChange={e => setAnonRequest({ ...anonRequest, category: e.target.value })}
+              required
+            >
+              <option value="">-- নির্বাচন করুন --</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center"><Globe className="w-4 h-4 mr-1 text-emerald-600" /> পছন্দের ভাষা</label>
+            <select
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+              value={anonRequest.preferredLanguage}
+              onChange={e => setAnonRequest({ ...anonRequest, preferredLanguage: e.target.value })}
+            >
+              <option value="bangla">বাংলা</option>
+              <option value="english">English</option>
+            </select>
+          </div>
+        </div>
 
-      {/* Anonymous Health Section */}
-      <div className="mt-6 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-        <h3 className="font-semibold text-lg mb-2 text-emerald-700">Submit Anonymous Health Request</h3>
-
-        <form className="space-y-2" onSubmit={handleAnonSubmit}>
-          <select
-            className="w-full p-2 border rounded"
-            value={anonRequest.category}
-            onChange={e => setAnonRequest({ ...anonRequest, category: e.target.value })}
-            required
-          >
-            <option value="">Select Category</option>
-            {categories.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+        {/* Severity */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center"><Clock className="w-4 h-4 mr-1 text-emerald-600" /> গুরুত্ব (Severity)</label>
+          <div className="flex justify-between space-x-2">
+            {['mild', 'moderate', 'severe'].map(level => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => setAnonRequest({ ...anonRequest, severity: level })}
+                className={`w-full py-2 rounded-xl text-sm font-medium transition duration-150 border-2 ${anonRequest.severity === level
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-emerald-50 dark:hover:bg-gray-700'
+                  }`}
+              >
+                {level === 'mild' ? 'স্বল্প' : level === 'moderate' ? 'মাঝারি' : 'গুরুতর'}
+              </button>
             ))}
-          </select>
+          </div>
+        </div>
 
+        {/* Symptoms */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center"><MessageSquare className="w-4 h-4 mr-1 text-emerald-600" /> উপসর্গ (কমা দিয়ে আলাদা করুন)</label>
           <input
             type="text"
-            placeholder="Symptoms (comma separated)"
-            className="w-full p-2 border rounded"
-            value={anonRequest.symptoms.join(", ")}
-            onChange={e => setAnonRequest({ ...anonRequest, symptoms: e.target.value.split(",").map(s => s.trim()) })}
+            placeholder="উদাহরণ: জ্বর, মাথা ব্যাথা, ক্লান্তি"
+            className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
+            value={anonRequest.symptoms}
+            onChange={e => setAnonRequest({ ...anonRequest, symptoms: e.target.value })}
             required
           />
+        </div>
 
+        {/* Context/Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center"><Globe className="w-4 h-4 mr-1 text-emerald-600" /> অতিরিক্ত বিবরণ (ঐচ্ছিক)</label>
           <textarea
-            placeholder="Additional description (optional)"
-            className="w-full p-2 border rounded"
+            placeholder="আপনার প্রশ্ন বা পরিস্থিতি বর্ণনা করুন..."
+            rows="3"
+            className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-emerald-500 focus:border-emerald-500"
             value={anonRequest.culturalContext}
             onChange={e => setAnonRequest({ ...anonRequest, culturalContext: e.target.value })}
           />
+        </div>
 
+        {/* Form Error */}
+        {anonError && (
+          <div className="p-3 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-xl flex items-center"><AlertTriangle className="w-5 h-5 mr-2" />{anonError}</div>
+        )}
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={anonLoading || !anonRequest.category || !anonRequest.symptoms}
+          className="w-full h-12 bg-emerald-600 text-white py-2 rounded-xl font-semibold hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg shadow-emerald-500/30"
+        >
+          {anonLoading ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" /> অনুরোধ জমা হচ্ছে...
+            </>
+          ) : (
+            <>
+              <Send className="w-5 h-5 mr-2" />
+              গোপনীয় পরামর্শের জন্য পাঠান
+            </>
+          )}
+        </button>
+      </form>
+
+      {/* AI Response Area */}
+      {anonResponse && (
+        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-600 rounded-xl text-blue-800 dark:text-blue-200 shadow-md space-y-2">
+          <h4 className="text-lg font-bold text-blue-900 dark:text-blue-100 flex items-center"><Stethoscope className="w-5 h-5 mr-2" /> AI থেকে পরামর্শ</h4>
+          <p className="text-sm"><strong>প্রাথমিক পরামর্শ:</strong> {anonResponse.primaryAdvice}</p>
+          <p className="text-sm"><strong>তাৎক্ষণিক পদক্ষেপ:</strong> {anonResponse.immediateActions}</p>
+          {anonResponse.culturalConsiderations && <p className="text-sm"><strong>সাংস্কৃতিক বিবেচনা:</strong> {anonResponse.culturalConsiderations}</p>}
+        </div>
+      )}
+    </div>
+  );
+
+  // --- MAIN COMPONENT RENDER ---
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 sm:p-10 font-sans">
+      <div className="max-w-4xl w-full mx-auto bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700">
+
+        {/* Main Title */}
+        <div className="flex items-center justify-center mb-6 border-b border-emerald-200 dark:border-emerald-800 pb-4">
+          <HeartHandshake className="w-10 h-10 text-emerald-600 dark:text-emerald-400 mr-3" />
+          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+            Mission 3: স্বাস্থ্য সেবা সংযোগ
+          </h2>
+        </div>
+
+        {/* --- TAB NAVIGATION --- */}
+        <div className="flex mb-6 border-b border-gray-200 dark:border-gray-700">
           <button
-            type="submit"
-            disabled={anonLoading}
-            className="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700"
+            onClick={() => setActiveTab('map')}
+            className={`px-4 py-2 text-lg font-semibold transition-colors duration-200 ${activeTab === 'map'
+              ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
+              : 'text-gray-500 dark:text-gray-400 hover:text-emerald-500'
+              }`}
           >
-            {anonLoading ? "Submitting..." : "Submit"}
+            <LocateFixed className="inline w-5 h-5 mr-2" /> নিকটবর্তী সুবিধা
           </button>
-        </form>
+          <button
+            onClick={() => setActiveTab('anon')}
+            className={`px-4 py-2 text-lg font-semibold transition-colors duration-200 ${activeTab === 'anon'
+              ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
+              : 'text-gray-500 dark:text-gray-400 hover:text-emerald-500'
+              }`}
+          >
+            <ShieldCheck className="inline w-5 h-5 mr-2" /> গোপনীয় পরামর্শ
+          </button>
+        </div>
 
-        {/* AI Response */}
-        {anonResponse && (
-          <div className="mt-3 p-2 border border-blue-200 bg-blue-50 rounded text-blue-800">
-            <p><strong>Primary Advice:</strong> {anonResponse.primaryAdvice}</p>
-            <p><strong>Immediate Actions:</strong> {anonResponse.immediateActions}</p>
-            {anonResponse.culturalConsiderations && <p><strong>Cultural Considerations:</strong> {anonResponse.culturalConsiderations}</p>}
-          </div>
-        )}
+        {/* --- TAB CONTENT --- */}
+        {activeTab === 'map' && renderHealthMapList()}
+        {activeTab === 'anon' && renderAnonForm()}
 
-        {/* Trust Info */}
-        {trustInfo.privacy && (
-          <div className="mt-3 text-sm text-gray-700">
-            <p><strong>Privacy:</strong> {trustInfo.privacy.anonymous}</p>
-            <p>{trustInfo.privacy.noTracking}</p>
-            <p>{trustInfo.privacy.dataRetention}</p>
-            <p>{trustInfo.privacy.encryption}</p>
-          </div>
-        )}
       </div>
     </div>
   );
 };
 
-export default Mission2;
+export default Mission3;
