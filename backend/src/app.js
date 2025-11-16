@@ -15,6 +15,11 @@ import seasonalHealthRoutes from "./routes/seasonalHealth.routes.js";
 import symptomGuideRoutes from "./routes/symptomGuide.routes.js";
 import healthAnalyticsRoutes from "./routes/healthAnalytics.routes.js";
 import { logger, requestLogger } from "./utils/logger.js";
+import { requestIdMiddleware } from "./middleware/requestId.js";
+import healthRouter from './routes/health.routes.js';
+import { metricsRouter } from "./routes/metrics.routes.js";
+import { metricsMiddleware } from "./middleware/metricsMiddleware.js";
+
 
 dotenv.config();
 
@@ -25,12 +30,19 @@ app.use(cors({ origin: "*", credentials: true }));
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(metricsMiddleware);
+
+app.use(metricsMiddleware);
+app.use(requestIdMiddleware);
 app.use(requestLogger); // logs incoming requests.
-app.get("/api/healthCheck", (req, res) => {
-    res.status(200).json({ message: "It is working" });
-});
+// app.get("/api/healthCheck", (req, res) => {
+//     res.status(200).json({ message: "It is working" });
+// });
 
 // apis
+app.use('/api/health', healthRouter);
+app.use("/api/metrics", metricsRouter);
+
 app.use("/api/auth", authRoutes);
 app.use("/api/mood", moodRoutes);
 app.use("/api/healthmap", HealthRoutes);
