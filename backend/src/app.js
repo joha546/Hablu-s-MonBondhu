@@ -41,7 +41,7 @@ app.use(requestLogger); // logs incoming requests.
 
 // apis
 app.use('/api/health', healthRouter);
-app.use("/api/metrics", metricsRouter);
+app.use("/metrics", metricsRouter);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/mood", moodRoutes);
