@@ -26,6 +26,14 @@ services:
             - ./backend/src:/home/node/backend/src
             - /home/node/backend/node_modules
 
+        # --- Healthcheck ---
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:2222/api/health/live"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
+
     client:
         container_name: client
         build:
