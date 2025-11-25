@@ -54,6 +54,13 @@ make test-backend
 
 ---
 
+## Technologies Used
+  
+  <p align="">
+  <!-- 🔹 First Row (10 items) -->
+  <img src="https://skillicons.dev/icons?i=react,tailwind,js,nodejs,express,mongodb,docker,redis" />
+</p>
+
 ## Conventions
 
 * Backend: `src/controllers`, `src/services`, `src/models`, `src/utils`
