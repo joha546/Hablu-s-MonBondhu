@@ -1,12 +1,42 @@
-FROM node:25
+# ============================
+# Stage 1 — Build dependencies
+# ============================
+FROM node:20 AS builder
 
-WORKDIR /home/node/backend
+# Create app directory
+WORKDIR /app
 
+# Copy package files
 COPY backend/package*.json ./
-RUN npm install
 
-COPY backend/src ./src
+# Install dependencies (clean reproducible install)
+RUN npm ci
+
+# Copy source code
+COPY backend .
+
+# Build if needed (example: ts -> js)
+# If you don’t have a build step, remove this
+# RUN npm run build
+
+
+# ============================
+# Stage 2 — Production image
+# ============================
+FROM node:20-slim AS production
+
+WORKDIR /app
+
+# Copy only node modules needed for production
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy compiled files or source
+COPY --from=builder /app .
+
+# Use a non-root user for security
+RUN useradd -m appuser
+USER appuser
 
 EXPOSE 2222
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start"]
