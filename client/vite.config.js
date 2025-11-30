@@ -10,6 +10,7 @@ export default defineConfig({
   server: {
       host: true,
       port: 5173,
+      allowedHosts: ['*'],
       // proxy /api to backend container (Docker Compose service name: backend)
       proxy: {
         "/api": {
