@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create Axios instance
 const apiClient = axios.create({
-    baseURL: "http://localhost:2222/api", // change to your server URL
+    baseURL: "https://hablu-s-monbondhu-backend.onrender.com/api", // change to your server URL
     headers: {
         "Content-Type": "application/json",
     },
